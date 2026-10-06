@@ -1,0 +1,470 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
+.page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  box-sizing: border-box;
+}
+
+.app-container {
+  width: 1440px;
+  height: 1020px;
+  background-color: #ffffff;
+  position: relative;
+  padding: 48px 100px;
+  box-sizing: border-box;
+  color: #1a1a1a;
+  overflow: hidden;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 55px;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+
+  transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #f3f4f6;
+}
+
+.back-icon {
+  font-size: 24px;
+  color: #1a1a1a;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+/* =========================
+   SOS SECTION
+========================= */
+
+.sos-section {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-bottom: 55px;
+}
+
+/* SOS Circle */
+
+.sos-circle {
+  width: 190px;
+  height: 190px;
+
+  background-color: #ffb6b0;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 28px;
+
+  box-shadow: 0 12px 30px rgba(255, 182, 176, 0.25);
+
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  font: inherit;
+
+  text-align: center;
+}
+
+.sos-circle:hover {
+  transform: scale(1.03);
+}
+
+/* SOS Text */
+
+.sos-text {
+  color: #ffffff;
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+/* Description */
+
+.description-text {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+
+  margin: 0;
+  max-width: 500px;
+}
+
+/* =========================
+   LIST
+========================= */
+
+.list-container {
+  width: 900px;
+
+  margin: 0 auto 36px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-item {
+  width: 100%;
+  min-height: 86px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 18px 22px;
+  box-sizing: border-box;
+
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+
+  background-color: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.list-item:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Icon */
+
+.icon-wrapper {
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-right: 18px;
+
+  color: #65a30d;
+  font-size: 20px;
+}
+
+/* Text */
+
+.item-content {
+  flex-grow: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.item-title {
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #1f2937;
+
+  margin: 0;
+}
+
+.item-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #9ca3af;
+
+  margin: 0;
+}
+
+/* Arrow */
+
+.chevron-right {
+  color: #1f2937;
+  font-size: 18px;
+  margin-left: 15px;
+}
+
+/* =========================
+   SEND SOS BUTTON
+========================= */
+
+.primary-button {
+  width: 900px;
+
+  display: block;
+
+  margin: 0 auto 25px;
+
+  padding: 19px 25px;
+
+  background-color: #65a30d;
+  color: #ffffff;
+
+  border: none;
+  border-radius: 30px;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 16px rgba(101, 163, 13, 0.25);
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.primary-button:hover {
+  background-color: #558a0b;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 8px 20px rgba(101, 163, 13, 0.3);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+/* =========================
+   TIMER
+========================= */
+
+.timer-container {
+  width: 900px;
+  min-height: 88px;
+
+  margin: 0 auto;
+
+  padding: 18px 24px;
+
+  box-sizing: border-box;
+
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+
+  background-color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timer-text {
+  font-size: 16px;
+  font-weight: 700;
+
+  color: #4b5563;
+
+  line-height: 1.4;
+
+  margin: 0;
+}
+
+/* Timer Circle */
+
+.timer-circle-wrapper {
+  position: relative;
+
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-svg {
+  width: 58px;
+  height: 58px;
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  transform: rotate(-90deg);
+}
+
+.timer-circle-bg {
+  fill: none;
+
+  stroke: #e5e7eb;
+
+  stroke-width: 3;
+}
+
+.timer-circle-progress {
+  fill: none;
+
+  stroke: #65a30d;
+
+  stroke-width: 3;
+
+  stroke-linecap: round;
+
+  transition: stroke-dashoffset 1s linear;
+}
+
+.timer-seconds {
+  position: relative;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  color: #4b5563;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 1200px) {
+  .app-container {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+
+    padding: 40px 50px;
+  }
+
+  .list-container,
+  .primary-button,
+  .timer-container {
+    width: 80%;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+  .app-container {
+    width: 100%;
+    min-height: 100vh;
+
+    padding: 30px 20px;
+  }
+
+  .header {
+    margin-bottom: 40px;
+  }
+
+  .header-title {
+    font-size: 22px;
+  }
+
+  .sos-circle {
+    width: 150px;
+    height: 150px;
+  }
+
+  .sos-text {
+    font-size: 36px;
+  }
+
+  .description-text {
+    font-size: 14px;
+  }
+
+  .list-container,
+  .primary-button,
+  .timer-container {
+    width: 100%;
+  }
+
+  .list-item {
+    min-height: 78px;
+    padding: 15px;
+  }
+
+  .icon-wrapper {
+    width: 46px;
+    height: 46px;
+    margin-right: 14px;
+  }
+
+  .item-title {
+    font-size: 15px;
+  }
+
+  .item-subtitle {
+    font-size: 12px;
+  }
+
+  .timer-text {
+    font-size: 14px;
+  }
+}

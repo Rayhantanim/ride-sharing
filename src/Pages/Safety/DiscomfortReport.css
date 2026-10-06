@@ -1,0 +1,441 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  background-color: #f3f4f6;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+/* =========================
+   PAGE
+========================= */
+
+.discomfort-page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.discomfort-app-container {
+  width: 100%;
+  max-width: 1280px;
+  min-height: 100vh;
+  padding: 45px 80px 60px;
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.discomfort-header {
+  width: 100%;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 45px;
+}
+
+.discomfort-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.discomfort-back-button {
+  position: absolute;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.discomfort-back-button:hover {
+  background-color: #f3f4f6;
+  transform: translateX(-3px);
+}
+
+/* =========================
+   INFO BOX
+========================= */
+
+.discomfort-info-box {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 40px;
+  padding: 28px 30px;
+  background-color: #f4f9e8;
+  border-radius: 20px;
+  border: 1px solid #e5f0cf;
+}
+
+.discomfort-info-box h2 {
+  font-size: 21px;
+  font-weight: 800;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.discomfort-info-box p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.discomfort-form-section {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.discomfort-section-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #374151;
+  margin-bottom: 18px;
+}
+
+.discomfort-options-wrapper {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* =========================
+   RADIO CARDS
+========================= */
+
+.discomfort-radio-card {
+  width: 100%;
+  min-height: 85px;
+  padding: 17px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.discomfort-radio-card:hover {
+  background-color: #fafafa;
+  transform: translateY(-1px);
+}
+
+.discomfort-radio-card.selected {
+  border-color: #65a30d;
+  background-color: #f9fdf5;
+}
+
+/* Radio Circle */
+
+.discomfort-radio-circle {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  margin-right: 17px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.discomfort-radio-card.selected .discomfort-radio-circle {
+  border-color: #65a30d;
+}
+
+.discomfort-radio-inner {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background-color: #65a30d;
+  display: none;
+}
+
+.discomfort-radio-card.selected .discomfort-radio-inner {
+  display: block;
+}
+
+/* Radio Text */
+
+.discomfort-radio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.discomfort-radio-content h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.discomfort-radio-content p {
+  font-size: 13px;
+  font-weight: 500;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* =========================
+   TEXTAREA
+========================= */
+
+.discomfort-textarea-section {
+  width: 100%;
+  max-width: 900px;
+  margin: 35px auto 0;
+}
+
+.discomfort-textarea-section .discomfort-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discomfort-textarea-section .discomfort-section-title span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  background-color: #f3f4f6;
+  padding: 5px 9px;
+  border-radius: 10px;
+}
+
+.discomfort-textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 17px;
+  border: 1px solid #e5e7eb;
+  border-radius: 17px;
+  background-color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.discomfort-textarea::placeholder {
+  color: #9ca3af;
+}
+
+.discomfort-textarea:focus {
+  border-color: #65a30d;
+  box-shadow: 0 0 0 3px rgba(101, 163, 13, 0.08);
+}
+
+/* =========================
+   SUBMIT BUTTON
+========================= */
+
+.discomfort-submit-button {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  min-height: 62px;
+  margin: 35px auto 0;
+  border: none;
+  border-radius: 32px;
+  background-color: #65a30d;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(101, 163, 13, 0.25);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.discomfort-submit-button:hover {
+  background-color: #558a0b;
+  transform: translateY(-2px);
+}
+
+.discomfort-submit-button.disabled {
+  background-color: #a3a3a3;
+  box-shadow: none;
+}
+
+/* =========================
+   SUCCESS
+========================= */
+
+.discomfort-success-section {
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.discomfort-success-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #f1f8e9;
+  color: #65a30d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 58px;
+  margin-bottom: 25px;
+}
+
+.discomfort-success-section h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.discomfort-success-section p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.discomfort-back-safety-button {
+  min-width: 230px;
+  height: 54px;
+  margin-top: 30px;
+  border: none;
+  border-radius: 28px;
+  background-color: #65a30d;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.discomfort-back-safety-button:hover {
+  background-color: #558a0b;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 1000px) {
+  .discomfort-app-container {
+    padding: 40px 50px 55px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+  .discomfort-app-container {
+    padding: 30px 25px 45px;
+  }
+
+  .discomfort-header {
+    margin-bottom: 35px;
+  }
+
+  .discomfort-header h1 {
+    font-size: 24px;
+  }
+
+  .discomfort-info-box {
+    padding: 22px;
+  }
+
+  .discomfort-info-box h2 {
+    font-size: 18px;
+  }
+
+  .discomfort-section-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 500px) {
+  .discomfort-app-container {
+    padding: 25px 18px 35px;
+  }
+
+  .discomfort-header h1 {
+    font-size: 21px;
+  }
+
+  .discomfort-info-box {
+    padding: 20px;
+  }
+
+  .discomfort-info-box p {
+    font-size: 12px;
+  }
+
+  .discomfort-options-wrapper {
+    padding: 12px;
+  }
+
+  .discomfort-radio-card {
+    padding: 14px;
+  }
+
+  .discomfort-radio-content h3 {
+    font-size: 14px;
+  }
+
+  .discomfort-radio-content p {
+    font-size: 12px;
+  }
+
+  .discomfort-submit-button {
+    font-size: 16 px;
+  }
+}

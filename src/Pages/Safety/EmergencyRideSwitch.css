@@ -1,0 +1,635 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
+/* =========================
+   PAGE
+========================= */
+
+.page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+
+  background-color: #f3f4f6;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  box-sizing: border-box;
+}
+
+/* =========================
+   MAIN WEB CONTAINER
+========================= */
+
+.app-container {
+  width: 1440px;
+  min-height: 1020px;
+
+  background-color: #ffffff;
+
+  position: relative;
+
+  padding: 48px 100px;
+
+  box-sizing: border-box;
+
+  color: #1a1a1a;
+
+  overflow: hidden;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  margin-bottom: 45px;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+
+  border: none;
+
+  cursor: pointer;
+
+  padding: 0;
+
+  border-radius: 50%;
+
+  transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #f3f4f6;
+}
+
+.back-icon {
+  font-size: 22px;
+
+  color: #1a1a1a;
+}
+
+.header-title {
+  margin: 0;
+
+  font-size: 28px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.3px;
+
+  color: #1a1a1a;
+
+  text-align: center;
+}
+
+/* =========================
+   ILLUSTRATION
+========================= */
+
+.illustration-container {
+  width: 100%;
+  height: 300px;
+
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  margin-bottom: 35px;
+
+  padding-bottom: 40px;
+
+  box-sizing: border-box;
+}
+
+/* =========================
+   MAP PINS
+========================= */
+
+.map-pin {
+  position: absolute;
+
+  top: 35px;
+
+  width: 48px;
+  height: 48px;
+
+  z-index: 2;
+}
+
+.map-pin.left {
+  left: 180px;
+}
+
+.map-pin.right {
+  right: 180px;
+}
+
+/* =========================
+   DASHED PATH
+========================= */
+
+.dashed-path-left {
+  position: absolute;
+
+  top: 75px;
+  left: 220px;
+
+  width: 250px;
+  height: 120px;
+
+  border-bottom: 2px dashed #8cc63f;
+  border-left: 2px dashed #8cc63f;
+
+  border-bottom-left-radius: 100px;
+
+  opacity: 0.6;
+
+  z-index: 1;
+}
+
+.dashed-path-right {
+  position: absolute;
+
+  top: 75px;
+  right: 220px;
+
+  width: 250px;
+  height: 120px;
+
+  border-bottom: 2px dashed #8cc63f;
+  border-right: 2px dashed #8cc63f;
+
+  border-bottom-right-radius: 100px;
+
+  opacity: 0.6;
+
+  z-index: 1;
+}
+
+/* =========================
+   CLOUD
+========================= */
+
+.cloud-background {
+  position: absolute;
+
+  bottom: 65px;
+
+  width: 380px;
+  height: 140px;
+
+  background-color: #f4f9e8;
+
+  border-radius: 50%;
+
+  z-index: 1;
+}
+
+/* =========================
+   CAR
+========================= */
+
+.car-wrapper {
+  position: relative;
+
+  z-index: 3;
+
+  width: 300px;
+  height: 90px;
+}
+
+.car-body {
+  position: absolute;
+
+  bottom: 0;
+
+  width: 100%;
+  height: 60px;
+
+  background-color: #8cc63f;
+
+  border-radius: 30px 55px 15px 15px;
+
+  z-index: 2;
+}
+
+.car-roof {
+  position: absolute;
+
+  bottom: 37px;
+  left: 75px;
+
+  width: 120px;
+  height: 45px;
+
+  background-color: #8cc63f;
+
+  border-radius: 60px 60px 0 0;
+
+  z-index: 1;
+}
+
+.car-window {
+  position: absolute;
+
+  bottom: 41px;
+  left: 82px;
+
+  width: 105px;
+  height: 30px;
+
+  background-color: #333333;
+
+  border-radius: 30px 30px 0 0;
+
+  z-index: 2;
+}
+
+.car-headlight {
+  position: absolute;
+
+  bottom: 15px;
+  left: -5px;
+
+  width: 22px;
+  height: 15px;
+
+  background-color: #ffffff;
+
+  border-radius: 7px 0 0 7px;
+
+  z-index: 3;
+}
+
+/* =========================
+   WHEELS
+========================= */
+
+.wheel-front {
+  position: absolute;
+
+  bottom: -15px;
+  right: 30px;
+
+  width: 42px;
+  height: 42px;
+
+  background-color: #4b5563;
+
+  border-radius: 50%;
+
+  border: 7px solid #1f2937;
+
+  z-index: 4;
+}
+
+.wheel-back {
+  position: absolute;
+
+  bottom: -15px;
+  left: 30px;
+
+  width: 42px;
+  height: 42px;
+
+  background-color: #4b5563;
+
+  border-radius: 50%;
+
+  border: 7px solid #1f2937;
+
+  z-index: 4;
+}
+
+/* =========================
+   MAIN TEXT
+========================= */
+
+.main-text {
+  max-width: 700px;
+
+  margin: 0 auto 38px;
+
+  padding: 0 20px;
+
+  text-align: center;
+
+  font-size: 25px;
+
+  font-weight: 700;
+
+  color: #4b5563;
+
+  line-height: 1.4;
+}
+
+/* =========================
+   PRIMARY BUTTON
+========================= */
+
+.primary-button {
+  width: 900px;
+
+  display: block;
+
+  margin: 0 auto 25px;
+
+  padding: 19px 25px;
+
+  background-color: #65a30d;
+
+  color: #ffffff;
+
+  border: none;
+
+  border-radius: 30px;
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 16px rgba(101, 163, 13, 0.25);
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.primary-button:hover {
+  background-color: #558a0b;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 8px 20px rgba(101, 163, 13, 0.3);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+/* =========================
+   CANCEL BUTTON
+========================= */
+
+.cancel-button {
+  width: 900px;
+
+  display: block;
+
+  margin: 0 auto 25px;
+
+  padding: 19px 25px;
+
+  background-color: #ef4444;
+
+  color: #ffffff;
+
+  border: none;
+
+  border-radius: 30px;
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 16px rgba(239, 68, 68, 0.2);
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: #dc2626;
+
+  transform: translateY(-1px);
+}
+
+/* =========================
+   TIMER
+========================= */
+
+.timer-container {
+  width: 900px;
+
+  min-height: 88px;
+
+  margin: 0 auto;
+
+  padding: 18px 24px;
+
+  box-sizing: border-box;
+
+  border-radius: 16px;
+
+  border: 1px solid #e5e7eb;
+
+  background-color: #ffffff;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+.timer-text {
+  font-size: 16px;
+
+  font-weight: 700;
+
+  color: #4b5563;
+
+  line-height: 1.4;
+
+  margin: 0;
+}
+
+.timer-circle-wrapper {
+  position: relative;
+
+  width: 60px;
+  height: 60px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.timer-svg {
+  width: 60px;
+  height: 60px;
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  transform: rotate(-90deg);
+}
+
+.timer-circle-bg {
+  fill: none;
+
+  stroke: #e5e7eb;
+
+  stroke-width: 4;
+}
+
+.timer-circle-progress {
+  fill: none;
+
+  stroke: #65a30d;
+
+  stroke-width: 4;
+
+  stroke-linecap: round;
+
+  transition: stroke-dashoffset 1s linear;
+}
+
+.timer-seconds {
+  position: relative;
+
+  font-size: 16px;
+
+  font-weight: 800;
+
+  color: #4b5563;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1200px) {
+  .app-container {
+    width: 100%;
+
+    min-height: 100vh;
+
+    padding: 40px 50px;
+  }
+
+  .primary-button,
+  .cancel-button,
+  .timer-container {
+    width: 80%;
+  }
+
+  .map-pin.left {
+    left: 10%;
+  }
+
+  .map-pin.right {
+    right: 10%;
+  }
+
+  .dashed-path-left {
+    left: 15%;
+  }
+
+  .dashed-path-right {
+    right: 15%;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    width: 100%;
+
+    min-height: 100vh;
+
+    padding: 30px 20px;
+  }
+
+  .header-title {
+    font-size: 22px;
+  }
+
+  .illustration-container {
+    height: 260px;
+  }
+
+  .map-pin.left {
+    left: 20px;
+  }
+
+  .map-pin.right {
+    right: 20px;
+  }
+
+  .dashed-path-left {
+    left: 45px;
+
+    width: 90px;
+  }
+
+  .dashed-path-right {
+    right: 45px;
+
+    width: 90px;
+  }
+
+  .cloud-background {
+    width: 260px;
+  }
+
+  .car-wrapper {
+    transform: scale(0.8);
+  }
+
+  .main-text {
+    font-size: 20px;
+  }
+
+  .primary-button,
+  .cancel-button,
+  .timer-container {
+    width: 100%;
+  }
+
+  .timer-container {
+    padding: 18px;
+  }
+}

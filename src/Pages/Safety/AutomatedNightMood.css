@@ -1,0 +1,458 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  background-color: #f3f4f6;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+/* =========================
+   PAGE
+========================= */
+
+.night-page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.night-app-container {
+  width: 100%;
+  max-width: 1280px;
+  min-height: 100vh;
+
+  padding: 45px 80px 60px;
+
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.night-header {
+  width: 100%;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  margin-bottom: 45px;
+}
+
+.night-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.night-back-button {
+  position: absolute;
+  left: 0;
+
+  width: 44px;
+  height: 44px;
+
+  border: none;
+  border-radius: 50%;
+
+  background-color: transparent;
+  color: #1a1a1a;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 20px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.night-back-button:hover {
+  background-color: #f3f4f6;
+  transform: translateX(-3px);
+}
+
+/* =========================
+   ILLUSTRATION
+========================= */
+
+.night-illustration-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  margin-bottom: 45px;
+}
+
+.night-icon-circle {
+  width: 150px;
+  height: 150px;
+
+  border-radius: 50%;
+
+  background-color: #f1f8e9;
+  color: #65a30d;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 65px;
+
+  margin-bottom: 25px;
+
+  box-shadow: 0 10px 30px rgba(101, 163, 13, 0.08);
+}
+
+.night-illustration-section h2 {
+  font-size: 25px;
+  font-weight: 800;
+
+  line-height: 1.35;
+
+  color: #374151;
+
+  margin-bottom: 10px;
+}
+
+.night-illustration-section p {
+  font-size: 14px;
+  font-weight: 500;
+
+  line-height: 1.6;
+
+  color: #9ca3af;
+}
+
+/* =========================
+   TOGGLE CARD
+========================= */
+
+.night-toggle-card {
+  width: 100%;
+  max-width: 900px;
+
+  min-height: 95px;
+
+  margin: 0 auto;
+
+  padding: 20px 22px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+
+  background-color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.night-toggle-info h3 {
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #374151;
+
+  margin-bottom: 6px;
+}
+
+.night-toggle-info p {
+  font-size: 13px;
+  font-weight: 500;
+
+  color: #9ca3af;
+}
+
+/* =========================
+   TOGGLE SWITCH
+========================= */
+
+.night-toggle-switch {
+  width: 58px;
+  height: 32px;
+
+  padding: 3px;
+
+  border: none;
+  border-radius: 30px;
+
+  background-color: #d1d5db;
+
+  display: flex;
+  align-items: center;
+
+  cursor: pointer;
+
+  transition: background-color 0.3s ease;
+}
+
+.night-toggle-knob {
+  width: 26px;
+  height: 26px;
+
+  border-radius: 50%;
+
+  background-color: #ffffff;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+  transition: transform 0.3s ease;
+}
+
+.night-toggle-switch.active {
+  background-color: #65a30d;
+}
+
+.night-toggle-switch.active .night-toggle-knob {
+  transform: translateX(26px);
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.night-status {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 18px auto 0;
+
+  padding: 14px 18px;
+
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.night-status.enabled {
+  background-color: #f1f8e9;
+  border: 1px solid #d9efb8;
+  color: #65a30d;
+}
+
+.night-status.disabled {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+/* =========================
+   FEATURES
+========================= */
+
+.night-features-card {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 30px auto 0;
+
+  padding: 25px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+
+  background-color: #ffffff;
+}
+
+.night-features-card h3 {
+  font-size: 18px;
+  font-weight: 800;
+
+  color: #374151;
+
+  margin-bottom: 18px;
+}
+
+.night-features-card ul {
+  list-style: none;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.night-features-card li {
+  position: relative;
+
+  padding-left: 22px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #4b5563;
+}
+
+.night-features-card li::before {
+  content: "✓";
+
+  position: absolute;
+  left: 0;
+
+  color: #65a30d;
+
+  font-weight: 800;
+}
+
+/* =========================
+   NOTIFICATION
+========================= */
+
+.night-notification-box {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 25px auto 0;
+
+  padding: 22px;
+
+  border-radius: 18px;
+
+  background-color: #f1f8e9;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+}
+
+.night-notification-icon {
+  width: 55px;
+  height: 55px;
+
+  border-radius: 50%;
+
+  background-color: #ffffff;
+
+  color: #65a30d;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 22px;
+
+  flex-shrink: 0;
+}
+
+.night-notification-box h3 {
+  font-size: 15px;
+  font-weight: 700;
+
+  color: #65a30d;
+
+  margin-bottom: 5px;
+}
+
+.night-notification-box p {
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #65a30d;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 1000px) {
+  .night-app-container {
+    padding: 40px 50px 55px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+  .night-app-container {
+    padding: 30px 25px 45px;
+  }
+
+  .night-header {
+    margin-bottom: 35px;
+  }
+
+  .night-header h1 {
+    font-size: 24px;
+  }
+
+  .night-icon-circle {
+    width: 130px;
+    height: 130px;
+    font-size: 56px;
+  }
+
+  .night-illustration-section h2 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 500px) {
+  .night-app-container {
+    padding: 25px 18px 35px;
+  }
+
+  .night-header h1 {
+    font-size: 21px;
+  }
+
+  .night-toggle-card {
+    padding: 17px;
+  }
+
+  .night-toggle-info h3 {
+    font-size: 15px;
+  }
+
+  .night-toggle-info p {
+    font-size: 11px;
+  }
+
+  .night-features-card {
+    padding: 20px;
+  }
+
+  .night-notification-box {
+    padding: 18px;
+  }
+}
