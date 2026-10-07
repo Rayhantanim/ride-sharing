@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Img from '../assets/forgetPass.png';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Img from "../assets/forgetPass.png";
 
 const ForgetPass = () => {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState('');
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    const digits = phone.replace(/\D/g, '');
+    const digits = phone.replace(/\D/g, "");
     if (digits.length < 8) {
-      setError('Please enter a valid phone number');
+      setError("Please enter a valid phone number");
       return;
     }
 
@@ -28,18 +28,18 @@ const ForgetPass = () => {
         phone: phone.trim(),
       });
 
-      console.log('📤 OTP sent to', phone);
+      console.log("📤 OTP sent to", phone);
       if (data.devCode) {
-        console.log('🔐 DEV OTP code:', data.devCode);
+        console.log("🔐 DEV OTP code:", data.devCode);
       }
 
-      navigate('/verify-otp', { state: { phone: phone.trim() } });
+      navigate("/verify-otp", { state: { phone: phone.trim() } });
     } catch (err) {
-      console.error('❌ send-otp error:', err.response?.data || err.message);
+      console.error("❌ send-otp error:", err.response?.data || err.message);
       setError(
         err.response?.data?.message ||
           err.message ||
-          'Failed to send OTP. Please try again.'
+          "Failed to send OTP. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -89,7 +89,14 @@ const ForgetPass = () => {
                     d="M12 20C12 20 18 17 18 11.5V6L12 3.5L6 6V11.5C6 17 12 20 12 20Z"
                     fill="white"
                   />
-                  <rect x="9" y="9.5" width="6" height="4" rx="1" fill="#82A800" />
+                  <rect
+                    x="9"
+                    y="9.5"
+                    width="6"
+                    height="4"
+                    rx="1"
+                    fill="#82A800"
+                  />
                   <path
                     d="M9 9V7.5C9 5.84315 10.3431 4.5 12 4.5C13.6569 4.5 15 5.84315 15 7.5V9"
                     stroke="#82A800"
@@ -156,11 +163,11 @@ const ForgetPass = () => {
               disabled={loading}
               className="w-full bg-[#7DA600] text-white font-bold py-4 rounded-full text-[16px] hover:bg-[#6F9400] transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'Sending OTP...' : 'Reset'}
+              {loading ? "Sending OTP..." : "Reset"}
             </button>
 
             <div className="text-center text-[14px] text-[#6B7280] mt-2">
-              Remember your password?{' '}
+              Remember your password?{" "}
               <Link
                 to="/login"
                 className="text-[#8EB800] font-semibold hover:underline"
