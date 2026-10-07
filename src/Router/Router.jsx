@@ -8,6 +8,10 @@ import CreateAccount from "../Pages/Signup/CreateAccount";
 import ForgetPass from "../Components/ForgetPass";
 import Home from "../Pages/Home/Home";
 
+import RideManagement from "../Pages/Ridemanagement/RideManagement";
+import Support from "../Pages/Support/Support";
+import VerifyOtp from "../Pages/VerifyOtp/VerifyOtp";
+
 import Safety from "../Pages/Safety/Safety";
 import SosEmergencyScreen from "../Pages/Safety/SosEmergency";
 import EmergencyRideSwitch from "../Pages/Safety/EmergencyRideSwitch";
@@ -28,6 +32,21 @@ const router = createBrowserRouter([
   {
     path: "/home",
     element: <Home />,
+  },
+
+  {
+    path: "/ride-management",
+    element: <RideManagement />,
+  },
+
+  {
+    path: "/support",
+    element: <Support />,
+  },
+
+  {
+    path: "/verify-otp",
+    element: <VerifyOtp />,
   },
 
   {
