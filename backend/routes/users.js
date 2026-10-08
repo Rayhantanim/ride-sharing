@@ -1,5 +1,6 @@
 const express = require('express');
 const User = require('../models/User');
+const protect = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -96,4 +97,17 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
+router.get('/me', protect, async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) return res.status(404).json({ success: false, message: 'Not found' });
+  res.json({
+    success: true,
+    user: {
+      id: user._id,
+      fullName: user.fullName,
+      phone: user.phone,
+      email: user.email,
+    },
+  });
+});
 module.exports = router;

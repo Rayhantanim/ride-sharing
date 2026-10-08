@@ -231,27 +231,29 @@ const ProfileIcon = () => (
 
 /* ─────────────────────── Quick Action ─────────────────────── */
 
-const QuickAction = ({ icon, label, to }) => {
+const QuickAction = ({ icon, label, to, onClick }) => {
+  const className =
+    "flex flex-col items-center justify-center gap-2 w-full h-full bg-white border border-[#E5E7EB] rounded-xl py-5 px-3 hover:border-[#8EB800] hover:shadow-sm transition";
+
   const content = (
     <>
       {icon}
-      <span className="text-[13px] font-medium text-[#1D1D1D]">{label}</span>
+      <span className="text-[13px] font-medium text-[#1D1D1D] text-center leading-tight">
+        {label}
+      </span>
     </>
   );
 
   if (to) {
     return (
-      <Link
-        to={to}
-        className="flex flex-col items-center justify-center gap-2 bg-white border border-[#E5E7EB] rounded-xl py-5 px-3 hover:border-[#8EB800] hover:shadow-sm transition"
-      >
+      <Link to={to} className={className}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button className="flex flex-col items-center justify-center gap-2 bg-white border border-[#E5E7EB] rounded-xl py-5 px-3 hover:border-[#8EB800] hover:shadow-sm transition">
+    <button type="button" onClick={onClick} className={className}>
       {content}
     </button>
   );
@@ -335,15 +337,10 @@ const Home = () => {
                     className="w-full pl-12 pr-4 py-4 bg-white border border-[#D6D9DE] rounded-xl text-[15px] text-[#1D1D1D] outline-none focus:border-[#8EB800] focus:ring-2 focus:ring-[#E8F5C8] transition appearance-none"
                   >
                     <option value="">Current location</option>
-
                     <option value="Chattogram">Chattogram</option>
-
                     <option value="Dhaka">Dhaka</option>
-
                     <option value="Cox's Bazar">Cox's Bazar</option>
-
                     <option value="Comilla">Comilla</option>
-
                     <option value="Feni">Feni</option>
                   </select>
                 </div>
@@ -363,15 +360,10 @@ const Home = () => {
                     className="w-full pl-12 pr-4 py-4 bg-white border border-[#D6D9DE] rounded-xl text-[15px] text-[#1D1D1D] outline-none focus:border-[#8EB800] focus:ring-2 focus:ring-[#E8F5C8] transition appearance-none"
                   >
                     <option value="">Where to go?</option>
-
                     <option value="Dhaka">Dhaka</option>
-
                     <option value="Chattogram">Chattogram</option>
-
                     <option value="Cox's Bazar">Cox's Bazar</option>
-
                     <option value="Comilla">Comilla</option>
-
                     <option value="Feni">Feni</option>
                   </select>
                 </div>
