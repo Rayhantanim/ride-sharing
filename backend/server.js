@@ -7,7 +7,7 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const rideRoutes = require("./routes/rides");
 const bookingRoutes = require("./routes/bookings");
-
+const safetyRoutes = require("./routes/safety");
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -20,7 +20,7 @@ app.use(
       "http://localhost:5173",
     ],
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -32,7 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/rides", rideRoutes);
 app.use("/api/bookings", bookingRoutes);
-
+app.use("/api/safety", safetyRoutes);
 // Database + Server
 mongoose
   .connect(process.env.MONGO_URI)

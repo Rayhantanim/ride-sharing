@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./TrustedCircle.css";
 import {
   FaChevronLeft,
@@ -16,67 +16,264 @@ const TrustedCircle = () => {
   const navigate = useNavigate();
 
   const [autoShare, setAutoShare] = useState(true);
-
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: "MOM",
-      number: "01xxxxxxxx",
-      invited: false,
-    },
-    {
-      id: 2,
-      name: "Dad",
-      number: "01xxxxxxxx",
-      invited: false,
-    },
-    {
-      id: 3,
-      name: "Mumu",
-      number: "01xxxxxxxx",
-      invited: false,
-    },
-  ]);
+  const [contacts, setContacts] = useState([]);
 
   const [showAddForm, setShowAddForm] = useState(false);
-
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
 
   const [shareStatus, setShareStatus] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Invite contact
-  const handleInvite = (id) => {
-    setContacts((previousContacts) =>
-      previousContacts.map((contact) =>
-        contact.id === id ? { ...contact, invited: true } : contact,
-      ),
-    );
+  /* ================= GET LOGGED-IN USER ================= */
+
+  const getUser = () => {
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.error("❌ Invalid user data:", error);
+      return null;
+    }
   };
 
-  // Add new contact
-  const handleAddContact = (e) => {
+  /* ================= LOAD SAFETY DATA ================= */
+
+  const fetchSafetyData = async () => {
+    try {
+      setLoading(true);
+
+      const user = getUser();
+
+      if (!user?.id) {
+        console.log("❌ No logged-in user.");
+        setContacts([]);
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/safety/${user.id}`,
+      );
+
+      const data = await response.json();
+
+      console.log("📥 Safety data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load safety data.");
+      }
+
+      setContacts(data.trustedContacts || []);
+
+      if (typeof data.autoShare === "boolean") {
+        setAutoShare(data.autoShare);
+      }
+    } catch (error) {
+      console.error("❌ Safety data error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSafetyData();
+  }, []);
+
+  /* ================= INVITE CONTACT ================= */
+
+  const handleInvite = async (contactId) => {
+    try {
+      const user = getUser();
+
+      if (!user?.id) {
+        alert("Please login first.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/safety/${user.id}/trusted-circle/${contactId}/invite`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      console.log("📥 Invite response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to invite contact.");
+      }
+
+      setContacts(data.trustedContacts || []);
+
+      alert("Invitation sent successfully.");
+    } catch (error) {
+      console.error("❌ Invite error:", error);
+
+      alert(error.message || "Failed to invite contact.");
+    }
+  };
+
+  /* ================= ADD CONTACT ================= */
+
+  const handleAddContact = async (e) => {
     e.preventDefault();
 
     if (!newName.trim() || !newNumber.trim()) {
+      alert("Please enter both name and phone number.");
       return;
     }
 
-    const newContact = {
-      id: Date.now(),
-      name: newName.trim(),
-      number: newNumber.trim(),
-      invited: false,
-    };
+    try {
+      setSaving(true);
 
-    setContacts((previousContacts) => [...previousContacts, newContact]);
+      const user = getUser();
 
-    setNewName("");
-    setNewNumber("");
-    setShowAddForm(false);
+      if (!user?.id) {
+        alert("Please login first.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/safety/${user.id}/trusted-circle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newName.trim(),
+            phone: newNumber.trim(),
+            relation: "Trusted Contact",
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      console.log("📥 Add contact response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add contact.");
+      }
+
+      setContacts(data.trustedContacts || []);
+
+      setNewName("");
+      setNewNumber("");
+      setShowAddForm(false);
+
+      alert("Trusted contact added successfully.");
+    } catch (error) {
+      console.error("❌ Add contact error:", error);
+
+      alert(error.message || "Failed to add contact.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Share live trip
+  /* ================= DELETE CONTACT ================= */
+
+  const handleDeleteContact = async (contactId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to remove this contact?",
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      const user = getUser();
+
+      if (!user?.id) {
+        alert("Please login first.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/safety/${user.id}/trusted-circle/${contactId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      const data = await response.json();
+
+      console.log("📥 Delete response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to remove contact.");
+      }
+
+      setContacts(data.trustedContacts || []);
+    } catch (error) {
+      console.error("❌ Delete contact error:", error);
+
+      alert(error.message || "Failed to remove contact.");
+    }
+  };
+
+  /* ================= AUTO SHARE ================= */
+
+  const handleAutoShareToggle = async () => {
+    const newValue = !autoShare;
+
+    setAutoShare(newValue);
+
+    try {
+      const user = getUser();
+
+      if (!user?.id) {
+        alert("Please login first.");
+        setAutoShare(!newValue);
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/safety/${user.id}/settings`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            autoShare: newValue,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      console.log("📥 Auto share response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update auto share.");
+      }
+
+      setAutoShare(data.safety?.autoShare ?? newValue);
+    } catch (error) {
+      console.error("❌ Auto share error:", error);
+
+      setAutoShare(!newValue);
+
+      alert(error.message || "Failed to update auto share.");
+    }
+  };
+
+  /* ================= SHARE LIVE TRIP ================= */
+
   const handleShareTrip = () => {
     setShareStatus(true);
 
@@ -88,9 +285,7 @@ const TrustedCircle = () => {
   return (
     <div className="trusted-page-wrapper">
       <div className="trusted-app-container">
-        {/* =========================
-            HEADER
-        ========================= */}
+        {/* ================= HEADER ================= */}
 
         <header className="trusted-header">
           <button
@@ -105,9 +300,7 @@ const TrustedCircle = () => {
           <h1>Trusted Circle</h1>
         </header>
 
-        {/* =========================
-            INTRO
-        ========================= */}
+        {/* ================= INTRO ================= */}
 
         <section className="trusted-intro">
           <div className="trusted-main-icon">
@@ -123,9 +316,7 @@ const TrustedCircle = () => {
           </p>
         </section>
 
-        {/* =========================
-            CONTACT SECTION
-        ========================= */}
+        {/* ================= CONTACT SECTION ================= */}
 
         <section className="trusted-section">
           <div className="trusted-section-heading">
@@ -138,45 +329,65 @@ const TrustedCircle = () => {
             <span className="contact-count">{contacts.length} Contacts</span>
           </div>
 
-          {/* Contact List */}
+          {/* CONTACT LIST */}
 
-          <div className="trusted-contact-list">
-            {contacts.map((contact) => (
-              <div className="trusted-contact-card" key={contact.id}>
-                <div className="trusted-contact-left">
-                  <div className="trusted-contact-avatar">
-                    <FaUser />
+          {loading ? (
+            <div className="trusted-empty-state">
+              Loading trusted contacts...
+            </div>
+          ) : contacts.length === 0 ? (
+            <div className="trusted-empty-state">
+              No trusted contacts added yet.
+            </div>
+          ) : (
+            <div className="trusted-contact-list">
+              {contacts.map((contact) => (
+                <div className="trusted-contact-card" key={contact._id}>
+                  <div className="trusted-contact-left">
+                    <div className="trusted-contact-avatar">
+                      <FaUser />
+                    </div>
+
+                    <div className="trusted-contact-info">
+                      <h3>{contact.name}</h3>
+
+                      <p>{contact.phone || contact.number}</p>
+                    </div>
                   </div>
 
-                  <div className="trusted-contact-info">
-                    <h3>{contact.name}</h3>
+                  <div className="trusted-contact-actions">
+                    <button
+                      type="button"
+                      className={`trusted-invite-button ${
+                        contact.invited ? "invited" : ""
+                      }`}
+                      onClick={() => handleInvite(contact._id)}
+                      disabled={contact.invited}
+                    >
+                      {contact.invited ? (
+                        <>
+                          <FaCheckCircle />
+                          Invited
+                        </>
+                      ) : (
+                        "Invite"
+                      )}
+                    </button>
 
-                    <p>{contact.number}</p>
+                    <button
+                      type="button"
+                      className="trusted-remove-button"
+                      onClick={() => handleDeleteContact(contact._id)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
 
-                <button
-                  type="button"
-                  className={`trusted-invite-button ${
-                    contact.invited ? "invited" : ""
-                  }`}
-                  onClick={() => handleInvite(contact.id)}
-                  disabled={contact.invited}
-                >
-                  {contact.invited ? (
-                    <>
-                      <FaCheckCircle />
-                      Invited
-                    </>
-                  ) : (
-                    "Invite"
-                  )}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Add Contact */}
+          {/* ADD CONTACT */}
 
           <button
             type="button"
@@ -199,9 +410,7 @@ const TrustedCircle = () => {
           </button>
         </section>
 
-        {/* =========================
-            AUTO SHARE
-        ========================= */}
+        {/* ================= AUTO SHARE ================= */}
 
         <section className="trusted-auto-share">
           <div className="trusted-auto-left">
@@ -219,16 +428,14 @@ const TrustedCircle = () => {
           <button
             type="button"
             className={`trusted-toggle ${autoShare ? "active" : ""}`}
-            onClick={() => setAutoShare(!autoShare)}
+            onClick={handleAutoShareToggle}
             aria-label="Toggle auto share"
           >
             <span></span>
           </button>
         </section>
 
-        {/* =========================
-            SHARE STATUS
-        ========================= */}
+        {/* ================= SHARE STATUS ================= */}
 
         {shareStatus && (
           <div className="trusted-success-message">
@@ -238,9 +445,7 @@ const TrustedCircle = () => {
           </div>
         )}
 
-        {/* =========================
-            SHARE BUTTON
-        ========================= */}
+        {/* ================= SHARE BUTTON ================= */}
 
         <button
           type="button"
@@ -251,9 +456,7 @@ const TrustedCircle = () => {
           Share Live Trip
         </button>
 
-        {/* =========================
-            ADD CONTACT MODAL
-        ========================= */}
+        {/* ================= ADD CONTACT MODAL ================= */}
 
         {showAddForm && (
           <div className="trusted-modal-overlay">
@@ -292,8 +495,12 @@ const TrustedCircle = () => {
                   onChange={(e) => setNewNumber(e.target.value)}
                 />
 
-                <button type="submit" className="trusted-add-button">
-                  Add Contact
+                <button
+                  type="submit"
+                  className="trusted-add-button"
+                  disabled={saving}
+                >
+                  {saving ? "Adding..." : "Add Contact"}
                 </button>
               </form>
             </div>

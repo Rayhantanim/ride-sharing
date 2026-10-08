@@ -194,24 +194,18 @@ const CardIcon = () => (
   </svg>
 );
 
-const StarIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="#8EB800">
-    <path d="M12 2l3 6.5 7 1-5 4.9 1.2 7L12 18l-6.2 3.4L7 14.4 2 9.5l7-1L12 2z" />
-  </svg>
-);
-
 /* ───────────────────────── Tabs ───────────────────────── */
 
 const Tabs = ({ active, onChange }) => {
-  const tabs = ["Current Ride", "Upcoming", "Past Ride"];
+  const tabs = ["Current Ride", "Past Ride"];
 
   return (
-    <div className="flex gap-3 p-2 bg-[#F4FBE8] rounded-2xl">
+    <div className="flex gap-3 p-2 bg-[#F4FBE8] rounded-2xl w-fit">
       {tabs.map((tab) => (
         <button
           key={tab}
           onClick={() => onChange(tab)}
-          className={`px-6 py-3 rounded-xl text-[14px] font-semibold transition whitespace-nowrap ${
+          className={`px-7 py-3 rounded-xl text-[14px] font-semibold transition whitespace-nowrap ${
             active === tab
               ? "bg-white text-[#8EB800] shadow-sm"
               : "bg-white/60 text-[#1D1D1D] hover:bg-white"
@@ -229,6 +223,7 @@ const Tabs = ({ active, onChange }) => {
 const ActionTile = ({ icon, label, danger, onClick }) => (
   <button
     onClick={onClick}
+    type="button"
     className={`flex flex-col items-center justify-center gap-3 bg-white border border-[#E5E7EB] rounded-xl py-6 px-4 hover:border-[#8EB800] hover:shadow-sm transition min-h-[120px] ${
       danger ? "hover:border-red-300" : ""
     }`}
@@ -254,164 +249,37 @@ const DetailRow = ({ icon, label, value }) => (
       <span className="text-[14px] text-[#4B5563]">{label}</span>
     </div>
 
-    <span className="text-[14px] font-medium text-[#1D1D1D]">{value}</span>
+    <span className="text-[14px] font-medium text-[#1D1D1D] text-right max-w-[220px]">
+      {value}
+    </span>
   </div>
 );
 
-/* ───────────────────────── Upcoming Ride ───────────────────────── */
+/* ───────────────────────── Empty State ───────────────────────── */
 
-const UpcomingRide = ({ booking, onCancel, cancelling }) => {
-  if (!booking) {
-    return (
-      <section className="lg:col-span-12 bg-white rounded-2xl border border-[#E5E7EB] p-10 shadow-sm text-center">
-        <div className="text-[18px] font-bold text-[#1D1D1D]">
-          No upcoming rides
-        </div>
+const EmptyRide = ({ type }) => {
+  const isCurrent = type === "Current Ride";
 
-        <p className="text-[14px] text-[#6B7280] mt-2">
-          Book a ride from Available Rides to see it here.
-        </p>
+  return (
+    <section className="bg-white rounded-2xl border border-[#E5E7EB] p-10 shadow-sm text-center">
+      <h3 className="text-[18px] font-bold text-[#1D1D1D]">
+        {isCurrent ? "No current rides" : "No past rides"}
+      </h3>
 
+      <p className="text-[14px] text-[#6B7280] mt-2">
+        {isCurrent
+          ? "Your active or upcoming ride will appear here."
+          : "Your completed, cancelled or previous rides will appear here."}
+      </p>
+
+      {isCurrent && (
         <Link
           to="/available-rides"
           className="inline-block mt-5 bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold px-6 py-3 rounded-xl transition"
         >
           Find a Ride
         </Link>
-      </section>
-    );
-  }
-
-  const rideData = booking.ride || {};
-
-  const bookedSeats = Number(booking.seats || 1);
-
-  const pricePerSeat = Number(rideData.price || 0);
-
-  const totalFare = pricePerSeat * bookedSeats;
-
-  const driverName =
-    rideData.driver?.fullName ||
-    rideData.driver?.name ||
-    rideData.driver?.email ||
-    "Available Driver";
-
-  const driverPhone = rideData.driver?.phone || "";
-
-  return (
-    <section className="lg:col-span-12 bg-white rounded-2xl border border-[#E5E7EB] p-8 shadow-sm">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LEFT */}
-        <div className="lg:col-span-2">
-          <span className="inline-flex px-3 py-1 rounded-full bg-[#F4FBE8] text-[#8EB800] text-[12px] font-bold">
-            {booking.status?.toUpperCase() || "PENDING"}
-          </span>
-
-          <h3 className="text-[26px] font-extrabold text-[#1D1D1D] mt-3">
-            {rideData.from || "Unknown"} → {rideData.to || "Unknown"}
-          </h3>
-
-          <p className="text-[14px] text-[#6B7280] mt-2">
-            {rideData.date || "Date unavailable"} •{" "}
-            {rideData.time || "Time unavailable"}
-          </p>
-
-          {/* ROUTE */}
-          <div className="relative flex flex-col gap-6 mt-7">
-            <div className="absolute left-[9px] top-[25px] bottom-[25px] border-l border-dashed border-[#C7CAD1]" />
-
-            <div className="relative flex items-start gap-4">
-              <span className="w-5 h-5 rounded-full bg-[#8EB800] ring-4 ring-[#E8F5C8] shrink-0 mt-1" />
-
-              <div>
-                <p className="text-[12px] text-[#9CA3AF]">PICKUP</p>
-
-                <p className="text-[15px] font-semibold text-[#1D1D1D] mt-1">
-                  {rideData.from || "Unknown"}
-                </p>
-              </div>
-            </div>
-
-            <div className="relative flex items-start gap-4">
-              <span className="w-5 h-5 rounded-full border-2 border-[#8EB800] bg-white shrink-0 mt-1" />
-
-              <div>
-                <p className="text-[12px] text-[#9CA3AF]">DESTINATION</p>
-
-                <p className="text-[15px] font-semibold text-[#1D1D1D] mt-1">
-                  {rideData.to || "Unknown"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* DRIVER */}
-          <div className="mt-8 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-[#DFF0BE] flex items-center justify-center text-[#8EB800] shrink-0">
-              <svg
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
-              </svg>
-            </div>
-
-            <div>
-              <p className="text-[15px] font-bold text-[#1D1D1D]">
-                {driverName}
-              </p>
-
-              {driverPhone && (
-                <p className="text-[12px] text-[#9CA3AF] mt-1">{driverPhone}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT */}
-        <div className="lg:border-l lg:border-[#E5E7EB] lg:pl-8">
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-            <div className="bg-[#F8F9FA] rounded-xl p-4">
-              <p className="text-[12px] text-[#9CA3AF]">SEATS</p>
-
-              <p className="text-[20px] font-bold text-[#1D1D1D] mt-1">
-                {bookedSeats}
-              </p>
-            </div>
-
-            <div className="bg-[#F8F9FA] rounded-xl p-4">
-              <p className="text-[12px] text-[#9CA3AF]">PRICE / SEAT</p>
-
-              <p className="text-[20px] font-bold text-[#1D1D1D] mt-1">
-                ৳{pricePerSeat.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="bg-[#F4FBE8] rounded-xl p-4 col-span-2 lg:col-span-1">
-              <p className="text-[12px] text-[#7A9900]">TOTAL FARE</p>
-
-              <p className="text-[28px] font-extrabold text-[#8EB800] mt-1">
-                ৳{totalFare.toFixed(2)}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={onCancel}
-            disabled={cancelling}
-            className="w-full mt-5 py-3 rounded-xl border border-red-200 text-red-500 font-semibold hover:bg-red-50 disabled:opacity-50 transition"
-          >
-            {cancelling ? "Cancelling..." : "Cancel Booking"}
-          </button>
-        </div>
-      </div>
+      )}
     </section>
   );
 };
@@ -419,54 +287,35 @@ const UpcomingRide = ({ booking, onCancel, cancelling }) => {
 /* ───────────────────────── Current Ride ───────────────────────── */
 
 const CurrentRide = ({ booking, onCancel, cancelling }) => {
-  if (!booking) {
-    return (
-      <section className="lg:col-span-12 bg-white rounded-2xl border border-[#E5E7EB] p-10 shadow-sm text-center">
-        <h3 className="text-[18px] font-bold text-[#1D1D1D]">
-          No current ride
-        </h3>
+  const rideData = booking?.ride || {};
 
-        <p className="text-[14px] text-[#6B7280] mt-2">
-          Your active ride will appear here.
-        </p>
-
-        <Link
-          to="/available-rides"
-          className="inline-block mt-5 bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold px-6 py-3 rounded-xl transition"
-        >
-          Find a Ride
-        </Link>
-      </section>
-    );
-  }
-
-  const rideData = booking.ride || {};
-
-  const bookedSeats = Number(booking.seats || 1);
-
-  const totalFare = Number(rideData.price || 0) * bookedSeats;
+  const bookedSeats = Number(booking?.seats || 1);
+  const pricePerSeat = Number(rideData?.price || 0);
+  const totalFare = pricePerSeat * bookedSeats;
 
   const driverName =
-    rideData.driver?.fullName ||
-    rideData.driver?.name ||
-    rideData.driver?.email ||
+    rideData?.driver?.fullName ||
+    rideData?.driver?.name ||
+    rideData?.driver?.email ||
     "Available Driver";
+
+  const driverPhone = rideData?.driver?.phone || "";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* LEFT */}
       <section className="lg:col-span-5 bg-white rounded-2xl border border-[#E5E7EB] p-8 shadow-sm">
         <span className="inline-flex px-3 py-1 rounded-full bg-[#F4FBE8] text-[#8EB800] text-[12px] font-bold">
-          {booking.status?.toUpperCase() || "PENDING"}
+          {booking?.status?.toUpperCase() || "PENDING"}
         </span>
 
         <h3 className="text-[24px] font-extrabold text-[#8EB800] mt-4">
-          {rideData.from || "Unknown"} → {rideData.to || "Unknown"}
+          {rideData?.from || "Unknown"} → {rideData?.to || "Unknown"}
         </h3>
 
         <p className="text-[14px] text-[#6B7280] mt-2">
-          {rideData.date || "Date unavailable"} •{" "}
-          {rideData.time || "Time unavailable"}
+          {rideData?.date || "Date unavailable"} •{" "}
+          {rideData?.time || "Time unavailable"}
         </p>
 
         <div className="relative my-6 h-[280px] lg:h-[320px] rounded-xl bg-gradient-to-br from-[#EAF7D4] to-[#F4FBE8] overflow-hidden">
@@ -490,7 +339,7 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
               </p>
 
               <p className="text-[13px] text-[#6B7280]">
-                {rideData.from || "Unknown"}
+                {rideData?.from || "Unknown"}
               </p>
             </div>
           </div>
@@ -504,7 +353,7 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
               </p>
 
               <p className="text-[13px] text-[#6B7280]">
-                {rideData.to || "Unknown"}
+                {rideData?.to || "Unknown"}
               </p>
             </div>
           </div>
@@ -536,14 +385,21 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
                 {driverName}
               </p>
 
-              <p className="text-[12px] text-[#9CA3AF] mt-0.5 truncate">
-                {rideData.car || "Vehicle information unavailable"}
-              </p>
+              {driverPhone ? (
+                <p className="text-[12px] text-[#9CA3AF] mt-0.5 truncate">
+                  {driverPhone}
+                </p>
+              ) : (
+                <p className="text-[12px] text-[#9CA3AF] mt-0.5 truncate">
+                  Vehicle information unavailable
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 mt-5">
             <button
+              type="button"
               onClick={() => alert("Calling driver...")}
               className="w-11 h-11 rounded-full border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F4FBE8] hover:border-[#8EB800] transition"
             >
@@ -551,6 +407,7 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
             </button>
 
             <button
+              type="button"
               onClick={() => alert("Chat feature coming soon.")}
               className="w-11 h-11 rounded-full border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F4FBE8] hover:border-[#8EB800] transition"
             >
@@ -588,7 +445,7 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
               icon={<CancelIcon />}
               label="Cancel"
               danger
-              onClick={onCancel}
+              onClick={() => onCancel(booking)}
             />
           </div>
         </div>
@@ -605,7 +462,7 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
             <DetailRow
               icon={<ClockIcon />}
               label="Ride Time"
-              value={`${rideData.date || "N/A"}, ${rideData.time || "N/A"}`}
+              value={`${rideData?.date || "N/A"}, ${rideData?.time || "N/A"}`}
             />
 
             <DetailRow
@@ -628,9 +485,10 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
           </div>
 
           <button
+            type="button"
             onClick={() =>
               alert(
-                `Fare: ৳${Number(rideData.price || 0).toFixed(
+                `Fare: ৳${pricePerSeat.toFixed(
                   2,
                 )} × ${bookedSeats} seat(s) = ৳${totalFare.toFixed(2)}`,
               )
@@ -657,20 +515,141 @@ const CurrentRide = ({ booking, onCancel, cancelling }) => {
   );
 };
 
+/* ───────────────────────── Past Ride Card ───────────────────────── */
+
+const PastRideCard = ({ booking }) => {
+  const rideData = booking?.ride || {};
+
+  const bookedSeats = Number(booking?.seats || 1);
+  const pricePerSeat = Number(rideData?.price || 0);
+  const totalFare = pricePerSeat * bookedSeats;
+
+  const status = booking?.status || "completed";
+
+  const statusText =
+    status === "cancelled"
+      ? "CANCELLED"
+      : status === "rejected"
+        ? "REJECTED"
+        : "COMPLETED";
+
+  const statusClass =
+    status === "cancelled"
+      ? "bg-red-50 text-red-500"
+      : status === "rejected"
+        ? "bg-orange-50 text-orange-500"
+        : "bg-[#F4FBE8] text-[#8EB800]";
+
+  return (
+    <section className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        <div className="flex items-start gap-5">
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#EAF7D4] to-[#F4FBE8] flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src={rideImage}
+              alt="Ride"
+              className="w-full h-full object-contain p-2"
+            />
+          </div>
+
+          <div>
+            <span
+              className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold ${statusClass}`}
+            >
+              {statusText}
+            </span>
+
+            <h3 className="text-[20px] font-extrabold text-[#1D1D1D] mt-2">
+              {rideData?.from || "Unknown"} → {rideData?.to || "Unknown"}
+            </h3>
+
+            <p className="text-[13px] text-[#6B7280] mt-1">
+              {rideData?.date || "Date unavailable"} •{" "}
+              {rideData?.time || "Time unavailable"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 md:grid-cols-2 gap-5 md:min-w-[250px]">
+          <div>
+            <p className="text-[11px] text-[#9CA3AF] uppercase">Seats</p>
+            <p className="text-[16px] font-bold text-[#1D1D1D] mt-1">
+              {bookedSeats}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[11px] text-[#9CA3AF] uppercase">Fare</p>
+            <p className="text-[16px] font-bold text-[#1D1D1D] mt-1">
+              ৳{totalFare.toFixed(2)}
+            </p>
+          </div>
+
+          <div className="md:col-span-2">
+            <p className="text-[11px] text-[#9CA3AF] uppercase">Driver</p>
+            <p className="text-[14px] font-semibold text-[#1D1D1D] mt-1 truncate">
+              {rideData?.driver?.fullName ||
+                rideData?.driver?.name ||
+                rideData?.driver?.email ||
+                "Available Driver"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 /* ───────────────────────── Main Component ───────────────────────── */
 
 const RideManagement = () => {
-  const [activeTab, setActiveTab] = useState("Upcoming");
+  const [activeTab, setActiveTab] = useState("Current Ride");
 
-  const [booking, setBooking] = useState(null);
+  const [bookings, setBookings] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
-  const [cancelling, setCancelling] = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
 
-  /* ================= FETCH BOOKINGS ================= */
+  /* ================= DATE HELPERS ================= */
 
-  const fetchBooking = async () => {
+  const getTodayString = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const getBookingDate = (item) => {
+    return item?.ride?.date || "";
+  };
+
+  const isPastBooking = (item) => {
+    const status = item?.status;
+
+    if (
+      status === "cancelled" ||
+      status === "completed" ||
+      status === "rejected"
+    ) {
+      return true;
+    }
+
+    const rideDate = getBookingDate(item);
+
+    if (!rideDate) {
+      return false;
+    }
+
+    return rideDate < getTodayString();
+  };
+
+  /* ================= FETCH ALL BOOKINGS ================= */
+
+  const fetchBookings = async () => {
     try {
       setLoading(true);
 
@@ -678,17 +657,15 @@ const RideManagement = () => {
 
       if (!storedUser) {
         console.log("❌ No logged-in user found.");
-        setBooking(null);
+        setBookings([]);
         return;
       }
 
       const user = JSON.parse(storedUser);
 
-      console.log("👤 Current user:", user);
-
       if (!user?.id) {
         console.log("❌ User ID missing.");
-        setBooking(null);
+        setBookings([]);
         return;
       }
 
@@ -696,49 +673,47 @@ const RideManagement = () => {
 
       const data = await response.json();
 
-      console.log("📥 Bookings from backend:", data);
+      console.log("📥 All bookings:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to load bookings.");
       }
 
-      /*
-        Find bookings belonging to current user.
-        passenger is populated by backend.
-      */
+      const currentUserId = String(user.id);
 
-      const userBookings = data.filter(
-        (item) =>
-          item.passenger?._id === user.id || item.passenger?.id === user.id,
-      );
+      const userBookings = data
+        .filter((item) => {
+          const passengerId =
+            item?.passenger?._id || item?.passenger?.id || item?.passenger;
 
-      /*
-        Pick the latest non-cancelled booking.
-      */
+          return passengerId && String(passengerId) === currentUserId;
+        })
+        .sort((a, b) => {
+          const dateA = getBookingDate(a);
+          const dateB = getBookingDate(b);
 
-      const activeBooking =
-        userBookings.find((item) => item.status !== "cancelled") || null;
+          return dateB.localeCompare(dateA);
+        });
 
-      console.log("🎯 Current user's booking:", activeBooking);
+      console.log("👤 Current user's bookings:", userBookings);
 
-      setBooking(activeBooking);
+      setBookings(userBookings);
     } catch (error) {
-      console.error("❌ Failed to fetch booking:", error);
-
-      setBooking(null);
+      console.error("❌ Failed to fetch bookings:", error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBooking();
+    fetchBookings();
   }, []);
 
   /* ================= CANCEL BOOKING ================= */
 
-  const handleCancelBooking = async () => {
-    if (!booking?._id) {
+  const handleCancelBooking = async (selectedBooking) => {
+    if (!selectedBooking?._id) {
       alert("Booking information not found.");
       return;
     }
@@ -752,10 +727,10 @@ const RideManagement = () => {
     }
 
     try {
-      setCancelling(true);
+      setCancellingId(selectedBooking._id);
 
       const response = await fetch(
-        `http://localhost:5000/api/bookings/${booking._id}/cancel`,
+        `http://localhost:5000/api/bookings/${selectedBooking._id}/cancel`,
         {
           method: "PATCH",
           headers: {
@@ -774,20 +749,21 @@ const RideManagement = () => {
 
       alert("Ride cancelled successfully.");
 
-      setBooking(null);
-
-      /*
-        Refresh booking list after cancellation.
-      */
-      await fetchBooking();
+      await fetchBookings();
     } catch (error) {
       console.error("❌ Cancel booking failed:", error);
 
       alert(error.message || "Failed to cancel booking.");
     } finally {
-      setCancelling(false);
+      setCancellingId(null);
     }
   };
+
+  /* ================= SPLIT BOOKINGS ================= */
+
+  const currentBookings = bookings.filter((item) => !isPastBooking(item));
+
+  const pastBookings = bookings.filter((item) => isPastBooking(item));
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
@@ -809,6 +785,7 @@ const RideManagement = () => {
           </h1>
 
           <button
+            type="button"
             className="p-2 -mr-2 hover:bg-gray-100 rounded-lg transition"
             aria-label="Support"
           >
@@ -825,7 +802,7 @@ const RideManagement = () => {
         </h2>
 
         <p className="text-[15px] text-[#6B7280] mt-1">
-          Track, manage and take control your rides.
+          Track, manage and take control of your rides.
         </p>
       </div>
 
@@ -846,40 +823,41 @@ const RideManagement = () => {
           </section>
         )}
 
-        {/* ================= UPCOMING ================= */}
+        {/* ================= CURRENT ================= */}
 
-        {!loading && activeTab === "Upcoming" && (
-          <div className="grid grid-cols-1 gap-6">
-            <UpcomingRide
-              booking={booking}
-              onCancel={handleCancelBooking}
-              cancelling={cancelling}
-            />
-          </div>
+        {!loading && activeTab === "Current Ride" && (
+          <>
+            {currentBookings.length === 0 ? (
+              <EmptyRide type="Current Ride" />
+            ) : (
+              <div className="flex flex-col gap-8">
+                {currentBookings.map((item) => (
+                  <CurrentRide
+                    key={item._id}
+                    booking={item}
+                    onCancel={handleCancelBooking}
+                    cancelling={cancellingId === item._id}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* ================= PAST ================= */}
 
         {!loading && activeTab === "Past Ride" && (
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] p-10 shadow-sm text-center">
-            <h3 className="text-[18px] font-bold text-[#1D1D1D]">
-              No past rides
-            </h3>
-
-            <p className="text-[14px] text-[#6B7280] mt-2">
-              Your completed rides will appear here.
-            </p>
-          </div>
-        )}
-
-        {/* ================= CURRENT RIDE ================= */}
-
-        {!loading && activeTab === "Current Ride" && (
-          <CurrentRide
-            booking={booking}
-            onCancel={handleCancelBooking}
-            cancelling={cancelling}
-          />
+          <>
+            {pastBookings.length === 0 ? (
+              <EmptyRide type="Past Ride" />
+            ) : (
+              <div className="flex flex-col gap-5">
+                {pastBookings.map((item) => (
+                  <PastRideCard key={item._id} booking={item} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
