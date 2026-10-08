@@ -65,7 +65,18 @@ const SilentSosScreen = () => {
           </p>
 
           {/* Trusted Circle */}
-          <div className="silent-trusted-card">
+          <div
+            className="silent-trusted-card"
+            onClick={() => navigate("/trusted-circle")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                navigate("/trusted-circle");
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
             <div className="silent-trusted-icon">
               <FaUsers />
             </div>

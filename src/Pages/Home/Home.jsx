@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import car from "../../assets/image 125.png";
 
@@ -45,7 +45,7 @@ const CarIcon = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M5 17h14M5 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
+    <path d="M5 17h14M5 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14 0a2 2 0 1 1-4 0" />
     <path d="M3 17V9l2-5h14l2 5v8" />
     <path d="M5 9h14" />
   </svg>
@@ -229,29 +229,33 @@ const ProfileIcon = () => (
   </svg>
 );
 
-const SwapIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="#8EB800"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M7 4v14M7 4l-3 3M7 4l3 3M17 20V6M17 20l3-3M17 20l-3-3" />
-  </svg>
-);
+/* ─────────────────────── Quick Action ─────────────────────── */
 
-/* ─────────────────────── Quick Action Tile ─────────────────────── */
+const QuickAction = ({ icon, label, to }) => {
+  const content = (
+    <>
+      {icon}
+      <span className="text-[13px] font-medium text-[#1D1D1D]">{label}</span>
+    </>
+  );
 
-const QuickAction = ({ icon, label }) => (
-  <button className="flex flex-col items-center justify-center gap-2 bg-white border border-[#E5E7EB] rounded-xl py-5 px-3 hover:border-[#8EB800] hover:shadow-sm transition">
-    {icon}
-    <span className="text-[13px] font-medium text-[#1D1D1D]">{label}</span>
-  </button>
-);
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className="flex flex-col items-center justify-center gap-2 bg-white border border-[#E5E7EB] rounded-xl py-5 px-3 hover:border-[#8EB800] hover:shadow-sm transition"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button className="flex flex-col items-center justify-center gap-2 bg-white border border-[#E5E7EB] rounded-xl py-5 px-3 hover:border-[#8EB800] hover:shadow-sm transition">
+      {content}
+    </button>
+  );
+};
 
 /* ─────────────────────── Safety Tile ─────────────────────── */
 
@@ -265,9 +269,28 @@ const SafetyTile = ({ icon, label }) => (
 /* ─────────────────────── Main Component ─────────────────────── */
 
 const Home = () => {
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
+
+  const handleFindRides = () => {
+    if (!fromLocation || !toLocation) {
+      alert("Please select both pickup and destination.");
+      return;
+    }
+
+    if (fromLocation === toLocation) {
+      alert("Pickup and destination cannot be the same.");
+      return;
+    }
+
+    window.location.href = `/available-rides?from=${encodeURIComponent(
+      fromLocation,
+    )}&to=${encodeURIComponent(toLocation)}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
-      {/* ── Header ─────────────────────────────────── */}
+      {/* Header */}
 
       <header className="w-full bg-white border-b border-[#E5E7EB]">
         <div className="max-w-[1400px] mx-auto px-8 py-5 flex items-center justify-between">
@@ -286,14 +309,14 @@ const Home = () => {
         </div>
       </header>
 
-      {/* ── Main Content ─────────────────────────────── */}
+      {/* Main */}
 
       <main className="flex-1 w-full max-w-[1400px] mx-auto px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
-          {/* ── LEFT COLUMN ───────────────────────── */}
+          {/* LEFT */}
 
           <section className="flex flex-col gap-8">
-            {/* Search card */}
+            {/* Search Card */}
 
             <div className="bg-white rounded-2xl border border-[#E5E7EB] p-8 shadow-sm">
               <h2 className="text-[22px] font-bold text-[#1D1D1D] mb-6">
@@ -301,45 +324,85 @@ const Home = () => {
               </h2>
 
               <div className="relative flex flex-col gap-3">
-                {/* Pickup */}
+                {/* FROM */}
 
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#8EB800] ring-4 ring-[#E8F5C8]" />
 
-                  <input
-                    type="text"
-                    placeholder="Current location"
-                    defaultValue=""
-                    className="w-full pl-12 pr-4 py-4 bg-white border border-[#D6D9DE] rounded-xl text-[15px] text-[#1D1D1D] placeholder:text-[#9CA3AF] outline-none focus:border-[#8EB800] focus:ring-2 focus:ring-[#E8F5C8] transition"
-                  />
+                  <select
+                    value={fromLocation}
+                    onChange={(e) => setFromLocation(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-[#D6D9DE] rounded-xl text-[15px] text-[#1D1D1D] outline-none focus:border-[#8EB800] focus:ring-2 focus:ring-[#E8F5C8] transition appearance-none"
+                  >
+                    <option value="">Current location</option>
+
+                    <option value="Chattogram">Chattogram</option>
+
+                    <option value="Dhaka">Dhaka</option>
+
+                    <option value="Cox's Bazar">Cox's Bazar</option>
+
+                    <option value="Comilla">Comilla</option>
+
+                    <option value="Feni">Feni</option>
+                  </select>
                 </div>
 
-                {/* Dotted line connector */}
+                {/* Connecting line */}
 
                 <div className="absolute left-[21px] top-[46px] bottom-[46px] w-px border-l border-dashed border-[#C7CAD1]" />
 
-                {/* Destination */}
+                {/* TO */}
 
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-sm bg-[#8EB800]" />
 
-                  <input
-                    type="text"
-                    placeholder="Where to go?"
-                    className="w-full pl-12 pr-4 py-4 bg-white border border-[#D6D9DE] rounded-xl text-[15px] text-[#1D1D1D] placeholder:text-[#9CA3AF] outline-none focus:border-[#8EB800] focus:ring-2 focus:ring-[#E8F5C8] transition"
-                  />
+                  <select
+                    value={toLocation}
+                    onChange={(e) => setToLocation(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-[#D6D9DE] rounded-xl text-[15px] text-[#1D1D1D] outline-none focus:border-[#8EB800] focus:ring-2 focus:ring-[#E8F5C8] transition appearance-none"
+                  >
+                    <option value="">Where to go?</option>
+
+                    <option value="Dhaka">Dhaka</option>
+
+                    <option value="Chattogram">Chattogram</option>
+
+                    <option value="Cox's Bazar">Cox's Bazar</option>
+
+                    <option value="Comilla">Comilla</option>
+
+                    <option value="Feni">Feni</option>
+                  </select>
                 </div>
+
+                {/* Find Available Rides */}
+
+                <button
+                  onClick={handleFindRides}
+                  className="w-full mt-2 bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold py-4 rounded-xl transition"
+                >
+                  Find Available Rides
+                </button>
               </div>
             </div>
 
-            {/* Quick actions */}
+            {/* Quick Actions */}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <QuickAction icon={<CarIcon />} label="Ride Now" />
+              <QuickAction
+                icon={<CarIcon />}
+                label="Ride Now"
+                to="/available-rides"
+              />
 
               <QuickAction icon={<CalendarIcon />} label="Schedule" />
 
-              <QuickAction icon={<HistoryIcon />} label="Ride history" />
+              <QuickAction
+                icon={<HistoryIcon />}
+                label="Ride history"
+                to="/ride-management"
+              />
 
               <QuickAction icon={<StarIcon />} label="Save Place" />
             </div>
@@ -354,27 +417,25 @@ const Home = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <SafetyTile icon={<ChatIcon />} label="In-App Chat" />
 
-                {/* Emergency → Safety Page */}
-
                 <Link to="/safety-preview" className="block">
                   <SafetyTile icon={<EmergencyIcon />} label="Emergency" />
                 </Link>
 
                 <SafetyTile icon={<ShareIcon />} label="Share Trip" />
 
-                <SafetyTile icon={<SosIcon />} label="Sos" />
+                <Link to="/sos-emergency" className="block">
+                  <SafetyTile icon={<SosIcon />} label="Sos" />
+                </Link>
               </div>
             </div>
           </section>
 
-          {/* ── RIGHT COLUMN ──────────────────────── */}
+          {/* RIGHT */}
 
           <section className="flex flex-col gap-8">
-            {/* Promo card */}
+            {/* Promo Card */}
 
             <div className="relative bg-[#EAF4FF] bg-opacity-60 rounded-2xl overflow-hidden p-8 min-h-[320px] flex flex-col justify-between">
-              {/* Text */}
-
               <div className="relative z-10 max-w-[280px]">
                 <h3 className="text-[26px] font-extrabold text-[#1D1D1D] leading-tight">
                   Affordable Rides,
@@ -386,9 +447,12 @@ const Home = () => {
                   Safe, Reliable, Always with you.
                 </p>
 
-                <button className="mt-6 bg-[#8EB800] hover:bg-[#7aa300] text-white font-semibold text-[14px] px-6 py-3 rounded-xl shadow-sm transition">
+                <Link
+                  to="/available-rides"
+                  className="inline-block mt-6 bg-[#8EB800] hover:bg-[#7aa300] text-white font-semibold text-[14px] px-6 py-3 rounded-xl shadow-sm transition"
+                >
                   Book Ride
-                </button>
+                </Link>
               </div>
 
               <img
@@ -401,12 +465,12 @@ const Home = () => {
         </div>
       </main>
 
-      {/* ── Bottom Nav ─────────────────────────────── */}
+      {/* Bottom Navigation */}
 
       <nav className="sticky bottom-0 w-full bg-white border-t border-[#E5E7EB]">
         <div className="max-w-[1400px] mx-auto px-8 py-3 flex items-center justify-around">
           <Link
-            to="/"
+            to="/home"
             className="flex flex-col items-center gap-1 text-[#8EB800]"
           >
             <HomeIcon />
@@ -414,7 +478,7 @@ const Home = () => {
           </Link>
 
           <Link
-            to="/activity"
+            to="/ride-management"
             className="flex flex-col items-center gap-1 text-[#6B7280] hover:text-[#8EB800] transition"
           >
             <ActivityIcon />
