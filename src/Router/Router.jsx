@@ -22,6 +22,7 @@ import FemaleDriverPreferences from "../Pages/Safety/FemaleDriverPreferences";
 import AutomatedNightMood from "../Pages/Safety/AutomatedNightMood";
 import AutoBlockUnsafeDriver from "../Pages/Safety/AutoBlockUnsafeDriver";
 import SafetyChecklist from "../Pages/Safety/SafetyChecklist";
+import Profile from "../Pages/Profile/Profile";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
   {
     path: "/ride-management",
     element: <RideManagement />,
+  },
+  {
+     path:"/profile",
+     element:<Profile/>
   },
 
   {
