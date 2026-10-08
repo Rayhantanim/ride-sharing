@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const userRoutes = require('./routes/users');
 
 // ─── Middleware ───────────────────────────────────────────────
 app.use(
@@ -24,7 +25,7 @@ app.use(express.json());
 // ─── Routes ───────────────────────────────────────────────────
 app.get('/', (req, res) => res.send('Hello World!'));
 app.use('/api/auth', authRoutes);
-
+app.use('/api/users', userRoutes);
 // ─── DB + Server ──────────────────────────────────────────────
 mongoose
   .connect(process.env.MONGO_URI)

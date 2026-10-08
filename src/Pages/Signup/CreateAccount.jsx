@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // 🆕 added useLocation
+import { useState, useMemo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; 
 import axios from 'axios';
 
 const CreateAccount = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // 🆕
+  const location = useLocation(); 
 
-  // 🆕 Read phone passed from /phone-signup
   const preselectedPhone = location.state?.phone || '';
 
   const [formData, setFormData] = useState({
