@@ -42,7 +42,14 @@ const safetyEventSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["sos", "silent-sos", "discomfort-report", "safety-checklist"],
+      enum: [
+        "sos",
+        "silent-sos",
+        "discomfort-report",
+        "safety-checklist",
+        "emergency-ride-switch-request",
+        "emergency-ride-switch-cancelled",
+      ],
       required: true,
     },
 
@@ -115,8 +122,9 @@ const safetySchema = new mongoose.Schema(
     /* ================= SAFETY SETTINGS ================= */
 
     femaleDriverPreference: {
-      type: Boolean,
-      default: false,
+      type: String,
+      enum: ["always", "available", "off"],
+      default: "always",
     },
 
     automatedNightMode: {
@@ -142,6 +150,11 @@ const safetySchema = new mongoose.Schema(
     safetyChecklistCompleted: {
       type: Boolean,
       default: false,
+    },
+
+    safetyChecklistItems: {
+      type: [Number],
+      default: [],
     },
 
     /* ================= COMFORT PREFERENCES ================= */

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./TrustedCircle.css";
+
 import {
   FaChevronLeft,
   FaUser,
@@ -10,7 +11,10 @@ import {
   FaTimes,
   FaCheckCircle,
 } from "react-icons/fa";
+
 import { useNavigate } from "react-router-dom";
+
+const SAFETY_API = "http://localhost:5000/api/safety";
 
 const TrustedCircle = () => {
   const navigate = useNavigate();
@@ -22,25 +26,26 @@ const TrustedCircle = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
 
-  const [shareStatus, setShareStatus] = useState(false);
+  const [shareStatus, setShareStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingAutoShare, setSavingAutoShare] = useState(false);
+  const [sharingTrip, setSharingTrip] = useState(false);
 
   /* ================= GET LOGGED-IN USER ================= */
 
   const getUser = () => {
-    const storedUser = localStorage.getItem("user");
-
-    if (!storedUser) {
-      return null;
-    }
-
     try {
-      return JSON.parse(storedUser);
+      return JSON.parse(localStorage.getItem("user") || "null");
     } catch (error) {
-      console.error("❌ Invalid user data:", error);
+      console.error("Invalid user data:", error);
       return null;
     }
+  };
+
+  const getUserId = () => {
+    const user = getUser();
+    return user?.id || user?._id || user?.userId || null;
   };
 
   /* ================= LOAD SAFETY DATA ================= */
@@ -49,33 +54,31 @@ const TrustedCircle = () => {
     try {
       setLoading(true);
 
-      const user = getUser();
+      const userId = getUserId();
 
-      if (!user?.id) {
-        console.log("❌ No logged-in user.");
+      if (!userId) {
         setContacts([]);
+        setShareStatus("Please log in to use Trusted Circle.");
         return;
       }
 
-      const response = await fetch(
-        `http://localhost:5000/api/safety/${user.id}`,
-      );
-
+      const response = await fetch(`${SAFETY_API}/${userId}`);
       const data = await response.json();
-
-      console.log("📥 Safety data:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to load safety data.");
       }
 
-      setContacts(data.trustedContacts || []);
+      const safety = data.safety || data.data || data;
 
-      if (typeof data.autoShare === "boolean") {
-        setAutoShare(data.autoShare);
+      setContacts(safety.trustedContacts || []);
+
+      if (typeof safety.autoShare === "boolean") {
+        setAutoShare(safety.autoShare);
       }
     } catch (error) {
-      console.error("❌ Safety data error:", error);
+      console.error("Safety data error:", error);
+      setShareStatus(error.message || "Failed to load trusted contacts.");
     } finally {
       setLoading(false);
     }
@@ -89,15 +92,15 @@ const TrustedCircle = () => {
 
   const handleInvite = async (contactId) => {
     try {
-      const user = getUser();
+      const userId = getUserId();
 
-      if (!user?.id) {
-        alert("Please login first.");
+      if (!userId) {
+        window.alert("Please log in first.");
         return;
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/safety/${user.id}/trusted-circle/${contactId}/invite`,
+        `${SAFETY_API}/${userId}/trusted-circle/${contactId}/invite`,
         {
           method: "PATCH",
           headers: {
@@ -108,19 +111,18 @@ const TrustedCircle = () => {
 
       const data = await response.json();
 
-      console.log("📥 Invite response:", data);
-
       if (!response.ok) {
-        throw new Error(data.message || "Failed to invite contact.");
+        throw new Error(data.message || "Failed to update invitation status.");
       }
 
       setContacts(data.trustedContacts || []);
 
-      alert("Invitation sent successfully.");
+      window.alert(
+        "Contact marked as invited. No SMS or invitation message was sent automatically.",
+      );
     } catch (error) {
-      console.error("❌ Invite error:", error);
-
-      alert(error.message || "Failed to invite contact.");
+      console.error("Invite error:", error);
+      window.alert(error.message || "Failed to update invitation status.");
     }
   };
 
@@ -130,54 +132,47 @@ const TrustedCircle = () => {
     e.preventDefault();
 
     if (!newName.trim() || !newNumber.trim()) {
-      alert("Please enter both name and phone number.");
+      window.alert("Please enter both name and phone number.");
+      return;
+    }
+
+    const userId = getUserId();
+
+    if (!userId) {
+      window.alert("Please log in first.");
       return;
     }
 
     try {
       setSaving(true);
 
-      const user = getUser();
-
-      if (!user?.id) {
-        alert("Please login first.");
-        return;
-      }
-
-      const response = await fetch(
-        `http://localhost:5000/api/safety/${user.id}/trusted-circle`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: newName.trim(),
-            phone: newNumber.trim(),
-            relation: "Trusted Contact",
-          }),
+      const response = await fetch(`${SAFETY_API}/${userId}/trusted-circle`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          name: newName.trim(),
+          phone: newNumber.trim(),
+          relation: "Trusted Contact",
+        }),
+      });
 
       const data = await response.json();
-
-      console.log("📥 Add contact response:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to add contact.");
       }
 
       setContacts(data.trustedContacts || []);
-
       setNewName("");
       setNewNumber("");
       setShowAddForm(false);
 
-      alert("Trusted contact added successfully.");
+      window.alert("Trusted contact added successfully.");
     } catch (error) {
-      console.error("❌ Add contact error:", error);
-
-      alert(error.message || "Failed to add contact.");
+      console.error("Add contact error:", error);
+      window.alert(error.message || "Failed to add contact.");
     } finally {
       setSaving(false);
     }
@@ -190,20 +185,18 @@ const TrustedCircle = () => {
       "Are you sure you want to remove this contact?",
     );
 
-    if (!confirmDelete) {
+    if (!confirmDelete) return;
+
+    const userId = getUserId();
+
+    if (!userId) {
+      window.alert("Please log in first.");
       return;
     }
 
     try {
-      const user = getUser();
-
-      if (!user?.id) {
-        alert("Please login first.");
-        return;
-      }
-
       const response = await fetch(
-        `http://localhost:5000/api/safety/${user.id}/trusted-circle/${contactId}`,
+        `${SAFETY_API}/${userId}/trusted-circle/${contactId}`,
         {
           method: "DELETE",
         },
@@ -211,81 +204,196 @@ const TrustedCircle = () => {
 
       const data = await response.json();
 
-      console.log("📥 Delete response:", data);
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to remove contact.");
       }
 
       setContacts(data.trustedContacts || []);
     } catch (error) {
-      console.error("❌ Delete contact error:", error);
-
-      alert(error.message || "Failed to remove contact.");
+      console.error("Delete contact error:", error);
+      window.alert(error.message || "Failed to remove contact.");
     }
   };
 
-  /* ================= AUTO SHARE ================= */
+  /* ================= AUTO SHARE SETTING ================= */
 
   const handleAutoShareToggle = async () => {
-    const newValue = !autoShare;
+    if (savingAutoShare) return;
 
-    setAutoShare(newValue);
+    const userId = getUserId();
+
+    if (!userId) {
+      window.alert("Please log in first.");
+      return;
+    }
+
+    const previousValue = autoShare;
+    const nextValue = !previousValue;
+
+    setSavingAutoShare(true);
+    setShareStatus("");
 
     try {
-      const user = getUser();
-
-      if (!user?.id) {
-        alert("Please login first.");
-        setAutoShare(!newValue);
-        return;
-      }
-
-      const response = await fetch(
-        `http://localhost:5000/api/safety/${user.id}/settings`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            autoShare: newValue,
-          }),
+      const response = await fetch(`${SAFETY_API}/${userId}/settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          autoShare: nextValue,
+        }),
+      });
 
       const data = await response.json();
 
-      console.log("📥 Auto share response:", data);
-
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update auto share.");
+        throw new Error(data.message || "Failed to update Auto Share.");
       }
 
-      setAutoShare(data.safety?.autoShare ?? newValue);
+      const savedSafety = data.safety || data.data?.safety;
+
+      setAutoShare(
+        typeof savedSafety?.autoShare === "boolean"
+          ? savedSafety.autoShare
+          : nextValue,
+      );
     } catch (error) {
-      console.error("❌ Auto share error:", error);
-
-      setAutoShare(!newValue);
-
-      alert(error.message || "Failed to update auto share.");
+      console.error("Auto Share error:", error);
+      setAutoShare(previousValue);
+      window.alert(error.message || "Failed to update Auto Share.");
+    } finally {
+      setSavingAutoShare(false);
     }
   };
 
-  /* ================= SHARE LIVE TRIP ================= */
+  /* ================= GET CURRENT LOCATION ================= */
 
-  const handleShareTrip = () => {
-    setShareStatus(true);
+  const getCurrentLocation = () =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Location is not supported by this browser."));
+        return;
+      }
 
-    setTimeout(() => {
-      setShareStatus(false);
-    }, 3000);
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      });
+    });
+
+  /* ================= SHARE CURRENT LOCATION ================= */
+
+  const handleShareTrip = async () => {
+    setShareStatus("");
+
+    if (!getUserId()) {
+      setShareStatus("Please log in to share your location.");
+      return;
+    }
+
+    if (contacts.length === 0) {
+      setShareStatus(
+        "Please add at least one trusted contact before sharing your location.",
+      );
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setShareStatus("Your browser does not support location sharing.");
+      return;
+    }
+
+    setSharingTrip(true);
+
+    try {
+      setShareStatus("Requesting your current location...");
+
+      const position = await getCurrentLocation();
+
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      const sharedAt = new Date().toLocaleString();
+
+      const message =
+        `I'm sharing my current location for safety.\n` +
+        `Map: ${mapUrl}\n` +
+        `Shared at: ${sharedAt}`;
+
+      if (typeof navigator.share === "function") {
+        try {
+          await navigator.share({
+            title: "My current location - ZyGo",
+            text: `I'm sharing my current location for safety. Shared at: ${sharedAt}`,
+            url: mapUrl,
+          });
+
+          setShareStatus(
+            "Share dialog completed. Please verify in your selected app that the location was sent to your trusted contact.",
+          );
+
+          return;
+        } catch (shareError) {
+          if (shareError.name === "AbortError") {
+            setShareStatus("Location sharing was cancelled.");
+            return;
+          }
+
+          console.warn(
+            "Device sharing unavailable; trying copy fallback.",
+            shareError,
+          );
+        }
+      }
+
+      // Fallback for browsers without the native share dialog.
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(message);
+
+        setShareStatus(
+          "Location link copied. Open your messaging app and send it to your trusted contacts.",
+        );
+      } else {
+        window.prompt(
+          "Copy this location message and send it to your trusted contacts:",
+          message,
+        );
+
+        setShareStatus(
+          "Use the location message above to share your current location.",
+        );
+      }
+    } catch (error) {
+      console.error("Share location error:", error);
+
+      let message = "Could not get your location. Please try again.";
+
+      if (error.code === 1) {
+        message =
+          "Location permission was denied. Allow location access in your browser settings and try again.";
+      } else if (error.code === 2) {
+        message =
+          "Your current location could not be determined. Please try again.";
+      } else if (error.code === 3) {
+        message = "Location request timed out. Please try again.";
+      } else if (error.message) {
+        message = error.message;
+      }
+
+      setShareStatus(message);
+    } finally {
+      setSharingTrip(false);
+    }
   };
+
+  /* ================= UI ================= */
 
   return (
     <div className="trusted-page-wrapper">
       <div className="trusted-app-container">
-        {/* ================= HEADER ================= */}
+        {/* HEADER */}
 
         <header className="trusted-header">
           <button
@@ -300,7 +408,7 @@ const TrustedCircle = () => {
           <h1>Trusted Circle</h1>
         </header>
 
-        {/* ================= INTRO ================= */}
+        {/* INTRO */}
 
         <section className="trusted-intro">
           <div className="trusted-main-icon">
@@ -312,17 +420,16 @@ const TrustedCircle = () => {
           <p>
             Keep your family and friends connected
             <br />
-            with your live trip location.
+            with your trip location.
           </p>
         </section>
 
-        {/* ================= CONTACT SECTION ================= */}
+        {/* CONTACT SECTION */}
 
         <section className="trusted-section">
           <div className="trusted-section-heading">
             <div>
               <h2>Your Trusted Contacts</h2>
-
               <p>People you can share your trip with</p>
             </div>
 
@@ -350,7 +457,6 @@ const TrustedCircle = () => {
 
                     <div className="trusted-contact-info">
                       <h3>{contact.name}</h3>
-
                       <p>{contact.phone || contact.number}</p>
                     </div>
                   </div>
@@ -401,7 +507,6 @@ const TrustedCircle = () => {
 
               <div>
                 <h3>ADD NEW CONTACT</h3>
-
                 <p>Invite more people</p>
               </div>
             </div>
@@ -410,7 +515,7 @@ const TrustedCircle = () => {
           </button>
         </section>
 
-        {/* ================= AUTO SHARE ================= */}
+        {/* AUTO SHARE */}
 
         <section className="trusted-auto-share">
           <div className="trusted-auto-left">
@@ -420,8 +525,7 @@ const TrustedCircle = () => {
 
             <div>
               <h3>Auto Share Your Trip</h3>
-
-              <p>Automatically share your trip with trusted contacts.</p>
+              <p>Save your preference for trip sharing.</p>
             </div>
           </div>
 
@@ -429,37 +533,59 @@ const TrustedCircle = () => {
             type="button"
             className={`trusted-toggle ${autoShare ? "active" : ""}`}
             onClick={handleAutoShareToggle}
+            disabled={savingAutoShare}
             aria-label="Toggle auto share"
+            aria-checked={autoShare}
+            role="switch"
+            style={{
+              opacity: savingAutoShare ? 0.6 : 1,
+              cursor: savingAutoShare ? "wait" : "pointer",
+            }}
           >
             <span></span>
           </button>
         </section>
 
-        {/* ================= SHARE STATUS ================= */}
+        {/* SHARE STATUS */}
 
         {shareStatus && (
-          <div className="trusted-success-message">
+          <div
+            className="trusted-success-message"
+            role="status"
+            aria-live="polite"
+          >
             <FaCheckCircle />
-
-            <span>Live trip has been shared with your trusted contacts.</span>
+            <span>{shareStatus}</span>
           </div>
         )}
 
-        {/* ================= SHARE BUTTON ================= */}
+        {/* SHARE CURRENT LOCATION */}
 
         <button
           type="button"
           className="trusted-share-button"
           onClick={handleShareTrip}
+          disabled={loading || sharingTrip}
+          style={{
+            opacity: loading || sharingTrip ? 0.65 : 1,
+            cursor: loading || sharingTrip ? "wait" : "pointer",
+          }}
         >
           <FaShareAlt />
-          Share Live Trip
+          {sharingTrip ? "Getting Location..." : "Share Live Trip"}
         </button>
 
-        {/* ================= ADD CONTACT MODAL ================= */}
+        {/* ADD CONTACT MODAL */}
 
         {showAddForm && (
-          <div className="trusted-modal-overlay">
+          <div
+            className="trusted-modal-overlay"
+            onClick={(event) => {
+              if (event.target === event.currentTarget && !saving) {
+                setShowAddForm(false);
+              }
+            }}
+          >
             <div className="trusted-modal">
               <div className="trusted-modal-header">
                 <h2>Add New Contact</h2>
@@ -468,6 +594,8 @@ const TrustedCircle = () => {
                   type="button"
                   className="trusted-close-button"
                   onClick={() => setShowAddForm(false)}
+                  disabled={saving}
+                  aria-label="Close"
                 >
                   <FaTimes />
                 </button>
@@ -477,22 +605,26 @@ const TrustedCircle = () => {
                 onSubmit={handleAddContact}
                 className="trusted-contact-form"
               >
-                <label>Contact Name</label>
+                <label htmlFor="trusted-contact-name">Contact Name</label>
 
                 <input
+                  id="trusted-contact-name"
                   type="text"
                   placeholder="Enter name"
                   value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
+                  onChange={(event) => setNewName(event.target.value)}
+                  required
                 />
 
-                <label>Phone Number</label>
+                <label htmlFor="trusted-contact-phone">Phone Number</label>
 
                 <input
+                  id="trusted-contact-phone"
                   type="tel"
                   placeholder="01xxxxxxxx"
                   value={newNumber}
-                  onChange={(e) => setNewNumber(e.target.value)}
+                  onChange={(event) => setNewNumber(event.target.value)}
+                  required
                 />
 
                 <button

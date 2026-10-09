@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,6 +9,7 @@ const userRoutes = require("./routes/users");
 const rideRoutes = require("./routes/rides");
 const bookingRoutes = require("./routes/bookings");
 const safetyRoutes = require("./routes/safety");
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -26,16 +28,27 @@ app.use(
 app.use(express.json());
 
 // Routes
-app.get("/", (req, res) => res.send("Hello World!"));
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/rides", rideRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/safety", safetyRoutes);
+
+// Check MongoDB configuration
+if (!process.env.MONGO_URI) {
+  console.error("❌ MONGO_URI is missing from the .env file.");
+  process.exit(1);
+}
+
 // Database + Server
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 10000,
+  })
   .then(() => {
     console.log("✅ Connected to MongoDB");
 
@@ -44,6 +57,10 @@ mongoose
     });
   })
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("\n❌ MongoDB connection failed!");
+    console.error("Error name:", err.name);
+    console.error("Error message:", err.message);
+    console.error("Error details:", err);
+
     process.exit(1);
   });

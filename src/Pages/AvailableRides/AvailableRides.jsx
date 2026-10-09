@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-/* ───────────────────── Icons ───────────────────── */
+/* ========================= ICONS ========================= */
 
 const BackIcon = () => (
   <svg
@@ -82,26 +82,7 @@ const StarIcon = () => (
   </svg>
 );
 
-const CarIcon = () => (
-  <svg
-    width="25"
-    height="25"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="#8EB800"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M5 17h14" />
-    <path d="M3 17V9l2-5h14l2 5v8" />
-    <path d="M5 9h14" />
-    <circle cx="5" cy="17" r="2" />
-    <circle cx="19" cy="17" r="2" />
-  </svg>
-);
-
-/* ───────────────────── Ride Card ───────────────────── */
+/* ========================= RIDE CARD ========================= */
 
 const RideCard = ({ ride }) => {
   const navigate = useNavigate();
@@ -120,13 +101,15 @@ const RideCard = ({ ride }) => {
     ride.driver?.email ||
     "Available Driver";
 
+  const driverGender = ride.driver?.gender?.toLowerCase();
+
   return (
     <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#8EB800] transition">
       {/* Driver */}
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#EAF4D4] flex items-center justify-center text-[#8EB800]">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-14 h-14 rounded-full bg-[#EAF4D4] flex items-center justify-center text-[#8EB800] shrink-0">
             <svg
               width="28"
               height="28"
@@ -142,8 +125,8 @@ const RideCard = ({ ride }) => {
             </svg>
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-[16px] font-bold text-[#1D1D1D]">
                 {driverName}
               </h3>
@@ -159,10 +142,16 @@ const RideCard = ({ ride }) => {
               {ride.color ? ` • ${ride.color}` : ""}
               {ride.plate ? ` • ${ride.plate}` : ""}
             </p>
+
+            {driverGender === "female" && (
+              <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-[#F4FBE8] text-[#729600] text-[11px] font-semibold">
+                Female driver
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <p className="text-[20px] font-extrabold text-[#1D1D1D]">
             ৳{Number(ride.price || 0).toFixed(2)}
           </p>
@@ -188,7 +177,7 @@ const RideCard = ({ ride }) => {
               <p className="text-[12px] text-[#9CA3AF]">Pick up</p>
 
               <p className="text-[14px] font-semibold text-[#1D1D1D]">
-                {ride.from}
+                {ride.from || "Unknown"}
               </p>
             </div>
 
@@ -196,7 +185,7 @@ const RideCard = ({ ride }) => {
               <p className="text-[12px] text-[#9CA3AF]">Destination</p>
 
               <p className="text-[14px] font-semibold text-[#1D1D1D]">
-                {ride.to}
+                {ride.to || "Unknown"}
               </p>
             </div>
           </div>
@@ -213,7 +202,8 @@ const RideCard = ({ ride }) => {
             <p className="text-[11px] text-[#9CA3AF]">Departure</p>
 
             <p className="text-[13px] font-semibold text-[#1D1D1D]">
-              {ride.time}
+              {ride.date || "Date unavailable"}
+              {ride.time ? `, ${ride.time}` : ""}
             </p>
           </div>
         </div>
@@ -234,6 +224,7 @@ const RideCard = ({ ride }) => {
       {/* Book Button */}
 
       <button
+        type="button"
         onClick={handleBook}
         className="w-full mt-5 bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold text-[14px] py-3.5 rounded-xl transition"
       >
@@ -243,7 +234,7 @@ const RideCard = ({ ride }) => {
   );
 };
 
-/* ───────────────────── Main Component ───────────────────── */
+/* ========================= MAIN COMPONENT ========================= */
 
 const AvailableRides = () => {
   const location = useLocation();
@@ -251,147 +242,239 @@ const AvailableRides = () => {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [preferenceNotice, setPreferenceNotice] = useState("");
 
-  /* ================= GET SELECTED LOCATIONS ================= */
+  /* ================= SELECTED LOCATIONS ================= */
 
   const searchParams = new URLSearchParams(location.search);
 
   const selectedFrom = searchParams.get("from") || "";
-
   const selectedTo = searchParams.get("to") || "";
 
-  /* ================= FETCH RIDES ================= */
+  /* ================= FETCH AND FILTER RIDES ================= */
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchRides = async () => {
       try {
         setLoading(true);
         setError("");
+        setPreferenceNotice("");
+
+        /* ---------- Load rides ---------- */
 
         const response = await fetch("http://localhost:5000/api/rides");
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error("Failed to fetch rides.");
+          throw new Error(data.message || "Failed to fetch rides.");
         }
 
-        const data = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid rides response from backend.");
+        }
 
         console.log("📥 All rides:", data);
 
-        /* ================= FILTER ================= */
+        /* ---------- Filter route and availability ---------- */
 
-        let filteredRides = data;
+        let routeRides = data.filter(
+          (ride) => ride.status === "available" && Number(ride.seats) > 0,
+        );
 
         if (selectedFrom && selectedTo) {
-          filteredRides = data.filter(
+          routeRides = routeRides.filter(
             (ride) =>
               ride.from?.trim().toLowerCase() ===
                 selectedFrom.trim().toLowerCase() &&
-              ride.to?.trim().toLowerCase() ===
-                selectedTo.trim().toLowerCase() &&
-              ride.status === "available" &&
-              Number(ride.seats) > 0,
-          );
-        } else {
-          filteredRides = data.filter(
-            (ride) => ride.status === "available" && Number(ride.seats) > 0,
+              ride.to?.trim().toLowerCase() === selectedTo.trim().toLowerCase(),
           );
         }
 
-        console.log("🎯 Filtered rides:", filteredRides);
+        /* ---------- Load logged-in user's preference ---------- */
 
-        setRides(filteredRides);
+        let preference = "off";
+
+        try {
+          const storedUser = localStorage.getItem("user");
+          const user = storedUser ? JSON.parse(storedUser) : null;
+          const userId = user?.id || user?._id;
+
+          if (userId) {
+            const preferenceResponse = await fetch(
+              `http://localhost:5000/api/safety/${userId}`,
+            );
+
+            if (preferenceResponse.ok) {
+              const safetyData = await preferenceResponse.json();
+
+              const savedPreference = safetyData.femaleDriverPreference;
+
+              if (["always", "available", "off"].includes(savedPreference)) {
+                preference = savedPreference;
+              } else if (typeof savedPreference === "boolean") {
+                preference = savedPreference ? "always" : "off";
+              }
+            }
+          }
+        } catch (preferenceError) {
+          console.error("Failed to load driver preference:", preferenceError);
+        }
+
+        /* ---------- Apply female driver preference ---------- */
+
+        const femaleRides = routeRides.filter(
+          (ride) => ride.driver?.gender?.toLowerCase() === "female",
+        );
+
+        let filteredRides = routeRides;
+        let notice = "";
+
+        if (preference === "always") {
+          // Only female-driver rides are shown.
+          filteredRides = femaleRides;
+
+          if (routeRides.length > 0 && femaleRides.length === 0) {
+            notice =
+              "No rides with female drivers are available on this route. Try another route or change your preference.";
+          }
+        } else if (preference === "available") {
+          // Female rides first, then other matching rides.
+          if (femaleRides.length > 0) {
+            const femaleRideIds = new Set(
+              femaleRides.map((ride) => String(ride._id)),
+            );
+
+            const otherRides = routeRides.filter(
+              (ride) => !femaleRideIds.has(String(ride._id)),
+            );
+
+            filteredRides = [...femaleRides, ...otherRides];
+
+            notice = "Female-driver rides are shown first.";
+          } else if (routeRides.length > 0) {
+            notice =
+              "No female-driver rides are available on this route. Showing other available rides.";
+          }
+        }
+
+        if (!cancelled) {
+          console.log("🎯 Driver preference:", preference);
+          console.log("🎯 Filtered rides:", filteredRides);
+
+          setPreferenceNotice(notice);
+          setRides(filteredRides);
+        }
       } catch (err) {
         console.error("❌ Fetch rides error:", err);
 
-        setError("Unable to load available rides.");
+        if (!cancelled) {
+          setError(err.message || "Unable to load available rides.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchRides();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedFrom, selectedTo]);
+
+  /* ================= PAGE ================= */
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
       {/* Header */}
 
       <header className="w-full bg-white border-b border-[#E5E7EB]">
-        <div className="max-w-[1000px] mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
           <Link
             to="/home"
-            className="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition text-[#1D1D1D]"
+            className="p-2 rounded-lg hover:bg-gray-100 transition"
+            aria-label="Back to Home"
           >
             <BackIcon />
           </Link>
 
-          <div className="flex items-center gap-2">
-            <CarIcon />
-
-            <h1 className="text-[30px] font-bold tracking-tight">
-              <span className="text-[#1D1D1D]">zy</span>
-
-              <span className="text-[#8EB800]">Go</span>
-            </h1>
-          </div>
+          <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight">
+            <span className="text-[#1D1D1D]">Available </span>
+            <span className="text-[#8EB800]">Rides</span>
+          </h1>
 
           <div className="w-10" />
         </div>
       </header>
 
-      {/* Content */}
+      {/* Main */}
 
-      <main className="w-full max-w-[1000px] mx-auto px-6 py-8">
+      <main className="flex-1 w-full max-w-[1400px] mx-auto px-6 md:px-8 py-8">
+        {/* Page title */}
+
         <div className="mb-7">
-          <h2 className="text-[28px] font-extrabold text-[#1D1D1D]">
-            Available Rides
+          <h2 className="text-[24px] md:text-[28px] font-extrabold text-[#1D1D1D]">
+            Find your ride
           </h2>
 
-          <p className="text-[14px] text-[#6B7280] mt-1">
-            Choose a ride that works best for you.
+          <p className="text-[14px] text-[#6B7280] mt-2">
+            Choose a ride that matches your route and preferences.
           </p>
         </div>
 
-        {/* Search Summary */}
+        {/* Selected Route */}
 
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 mb-6 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* FROM */}
-
-            <div className="flex items-center gap-3">
-              <MapPinIcon />
-
+        {(selectedFrom || selectedTo) && (
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <p className="text-[11px] text-[#9CA3AF]">From</p>
-
-                <p className="text-[14px] font-semibold text-[#1D1D1D]">
-                  {selectedFrom || "All locations"}
+                <p className="text-[12px] text-[#9CA3AF] mb-2">
+                  SELECTED ROUTE
                 </p>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="px-3 py-2 rounded-lg bg-[#F4FBE8] text-[#729600] text-[14px] font-semibold">
+                    {selectedFrom || "Any pickup"}
+                  </span>
+
+                  <span className="text-[#8EB800] font-bold">→</span>
+
+                  <span className="px-3 py-2 rounded-lg bg-[#F4FBE8] text-[#729600] text-[14px] font-semibold">
+                    {selectedTo || "Any destination"}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* TO */}
-
-            <div className="flex items-center gap-3">
-              <MapPinIcon />
-
-              <div>
-                <p className="text-[11px] text-[#9CA3AF]">To</p>
-
-                <p className="text-[14px] font-semibold text-[#1D1D1D]">
-                  {selectedTo || "All destinations"}
-                </p>
-              </div>
+              <Link
+                to="/home"
+                className="text-[13px] font-semibold text-[#729600] hover:underline"
+              >
+                Change route
+              </Link>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Preference Notice */}
+
+        {preferenceNotice && (
+          <div className="mb-6 rounded-xl border border-[#DCE9BB] bg-[#F4FBE8] p-4 text-[14px] text-[#536B13]">
+            {preferenceNotice}
+          </div>
+        )}
 
         {/* Loading */}
 
         {loading && (
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 text-center">
-            <p className="text-[14px] text-[#6B7280]">
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-12 text-center">
+            <div className="w-9 h-9 border-4 border-[#DCE9BB] border-t-[#8EB800] rounded-full animate-spin mx-auto mb-4" />
+
+            <p className="text-[15px] font-medium text-[#4B5563]">
               Loading available rides...
             </p>
           </div>
@@ -401,50 +484,79 @@ const AvailableRides = () => {
 
         {!loading && error && (
           <div className="bg-white border border-red-200 rounded-2xl p-8 text-center">
-            <p className="text-[14px] text-red-500">{error}</p>
-          </div>
-        )}
+            <h3 className="text-[18px] font-bold text-red-600">
+              Unable to load rides
+            </h3>
 
-        {/* No rides */}
+            <p className="text-[14px] text-[#6B7280] mt-2">{error}</p>
 
-        {!loading && !error && rides.length === 0 && (
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 text-center">
-            <p className="text-[14px] text-[#6B7280]">
-              {selectedFrom && selectedTo
-                ? `No rides found from ${selectedFrom} to ${selectedTo}.`
-                : "No available rides found."}
-            </p>
-
-            <Link
-              to="/home"
-              className="inline-block mt-5 bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold px-6 py-3 rounded-xl transition"
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-5 px-5 py-3 rounded-xl bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold text-[14px]"
             >
-              Change Location
-            </Link>
+              Try Again
+            </button>
           </div>
         )}
 
         {/* Ride List */}
 
         {!loading && !error && rides.length > 0 && (
-          <div className="flex flex-col gap-5">
-            {rides.map((ride) => (
-              <RideCard key={ride._id} ride={ride} />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <h3 className="text-[18px] font-bold text-[#1D1D1D]">
+                {rides.length} {rides.length === 1 ? "Ride" : "Rides"} Found
+              </h3>
+
+              <span className="text-[12px] text-[#6B7280]">
+                Available seats only
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {rides.map((ride) => (
+                <RideCard key={ride._id} ride={ride} />
+              ))}
+            </div>
+          </>
         )}
 
-        {/* Footer */}
+        {/* Empty State */}
 
-        {!loading && !error && rides.length > 0 && (
-          <div className="text-center mt-8">
-            <p className="text-[12px] text-[#9CA3AF]">
-              Showing {rides.length} available{" "}
-              {rides.length === 1 ? "ride" : "rides"}
+        {!loading && !error && rides.length === 0 && (
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 md:p-12 text-center">
+            <div className="w-16 h-16 bg-[#F4FBE8] rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <MapPinIcon />
+            </div>
+
+            <h3 className="text-[20px] font-bold text-[#1D1D1D]">
+              No matching rides found
+            </h3>
+
+            <p className="text-[14px] leading-6 text-[#6B7280] mt-3 max-w-md mx-auto">
+              {selectedFrom && selectedTo
+                ? `No rides are currently available from ${selectedFrom} to ${selectedTo} that match your driver preference.`
+                : "There are no available rides matching your current preference."}
             </p>
+
+            <Link
+              to="/home"
+              className="inline-flex items-center justify-center mt-6 px-6 py-3 rounded-xl bg-[#8EB800] hover:bg-[#7AA300] text-white font-semibold text-[14px] transition"
+            >
+              Change Route
+            </Link>
           </div>
         )}
       </main>
+
+      {/* Bottom spacing */}
+
+      <footer className="w-full border-t border-[#E5E7EB] bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-4 text-center text-[12px] text-[#9CA3AF]">
+          zyGo · Safe and comfortable rides
+        </div>
+      </footer>
     </div>
   );
 };
