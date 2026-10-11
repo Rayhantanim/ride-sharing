@@ -1,5 +1,5 @@
 import React from 'react';
-import img from '../../assets/image 107.jpg';
+import img from '../../assets/man.jpg';
 import { Link } from 'react-router-dom';
 
 const Signup = () => {
@@ -29,7 +29,7 @@ const Signup = () => {
               height="22"
               viewBox="0 0 24 24"
               fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+              xmlns="http://www.w3.org/2000/svg"b
               className="w-5 h-5 md:w-6 md:h-6"
             >
               <path

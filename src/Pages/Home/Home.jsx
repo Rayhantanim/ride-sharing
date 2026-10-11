@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import car from "../../assets/image 125.png";
+import Sidebar from "../../Components/Sidebar.jsx";
 
 /* ─────────────────────── Icon Set ─────────────────────── */
 
@@ -265,15 +266,24 @@ const SafetyTile = ({ icon, label }) => (
 /* ─────────────────────── Main Component ─────────────────────── */
 
 const Home = () => {
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
+    <Sidebar
+      isOpen={sidebarOpen}
+      onClose={() => setSidebarOpen(false)}
+    />
       {/* ── Header ─────────────────────────────────── */}
 
       <header className="w-full bg-white border-b border-[#E5E7EB]">
         <div className="max-w-[1400px] mx-auto px-8 py-5 flex items-center justify-between">
-          <button className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition">
-            <MenuIcon />
-          </button>
+          <button
+  onClick={() => setSidebarOpen(true)}
+  className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition"
+>
+  <MenuIcon />
+</button>
 
           <h1 className="text-[40px] font-bold tracking-tight select-none">
             <span className="text-[#1D1D1D]">zy</span>
