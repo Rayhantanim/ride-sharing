@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 /* ───────────────────── Icons ───────────────────── */
 
@@ -98,11 +98,109 @@ const SectionLabel = ({ children }) => (
   </p>
 );
 
+/* ───────────────────── Helpers ───────────────────── */
+
+/**
+ * Wipes every known client-side artifact that could hold login data.
+ * Safe to call even if some of these APIs are unavailable.
+ */
+const clearAllLoginData = () => {
+  // 1. localStorage — remove only known keys, or wipe entirely.
+  //    We use a key list first, then a targeted prefix sweep.
+  const localStorageKeys = [
+    "token",
+    "accessToken",
+    "refreshToken",
+    "idToken",
+    "authToken",
+    "user",
+    "userData",
+    "currentUser",
+    "auth",
+    "authUser",
+    "session",
+    "jwt",
+    "profile",
+    "rememberMe",
+  ];
+  localStorageKeys.forEach((k) => {
+    try {
+      localStorage.removeItem(k);
+    } catch (_) {}
+  });
+
+  // Sweep any namespaced keys (e.g. "zygo:token", "app_user")
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (/auth|token|user|session|jwt|login|profile/i.test(key)) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (_) {}
+
+  // 2. sessionStorage — same treatment
+  const sessionStorageKeys = [...localStorageKeys];
+  sessionStorageKeys.forEach((k) => {
+    try {
+      sessionStorage.removeItem(k);
+    } catch (_) {}
+  });
+  try {
+    Object.keys(sessionStorage).forEach((key) => {
+      if (/auth|token|user|session|jwt|login|profile/i.test(key)) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (_) {}
+
+  // 3. Cookies — expire any auth-related cookie on the current domain
+  try {
+    const cookieNames = document.cookie
+      .split(";")
+      .map((c) => c.split("=")[0].trim())
+      .filter(Boolean);
+    cookieNames.forEach((name) => {
+      if (/auth|token|user|session|jwt|login|profile/i.test(name)) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+      }
+    });
+  } catch (_) {}
+
+  // 4. IndexedDB — delete any database whose name looks auth-related
+  try {
+    if (window.indexedDB?.databases) {
+      window.indexedDB.databases().then((dbs) => {
+        dbs.forEach((db) => {
+          if (db.name && /auth|token|user|session|login/i.test(db.name)) {
+            window.indexedDB.deleteDatabase(db.name);
+          }
+        });
+      });
+    }
+  } catch (_) {}
+
+  // 5. Cache Storage — drop API/auth caches
+  try {
+    if (window.caches?.keys) {
+      window.caches.keys().then((keys) => {
+        keys.forEach((key) => {
+          if (/auth|token|user|session|api/i.test(key)) {
+            window.caches.delete(key);
+          }
+        });
+      });
+    }
+  } catch (_) {}
+};
+
 /* ───────────────────── Sidebar ───────────────────── */
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, onLogout }) => {
   const sidebarRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -143,6 +241,36 @@ const Sidebar = ({ isOpen, onClose }) => {
       document.body.style.overflow = originalOverflow;
     };
   }, [isOpen, onClose]);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    try {
+      // 1. Optional backend call — invalidate the session server-side
+      // await fetch("/api/auth/logout", {
+      //   method: "POST",
+      //   credentials: "include",
+      // });
+
+      // 2. Wipe every known client-side auth artifact
+      clearAllLoginData();
+
+      // 3. Let parent component react (reset context/state, etc.)
+      onLogout?.();
+
+      // 4. Close the sidebar
+      onClose();
+
+      // 5. Redirect to login (or home). `replace: true` prevents the
+      //    user from navigating "Back" into a protected page.
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -232,11 +360,16 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* ─── Logout ─── */}
         <div className="px-4 py-4 border-t border-[#E5E7EB] flex-shrink-0 shadow-[0_-1px_3px_rgba(0,0,0,0.04)]">
           <button
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-[#DC2626] hover:bg-red-50 hover:shadow-sm transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-[#DC2626] hover:bg-red-50 hover:shadow-sm transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Log out of your account"
           >
             <LogoutIcon />
-            <span className="text-[15px] font-medium">Logout</span>
+            <span className="text-[15px] font-medium">
+              {isLoggingOut ? "Logging out…" : "Logout"}
+            </span>
           </button>
         </div>
       </aside>

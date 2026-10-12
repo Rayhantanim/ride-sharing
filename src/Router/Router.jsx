@@ -22,6 +22,12 @@ import FemaleDriverPreferences from "../Pages/Safety/FemaleDriverPreferences";
 import AutomatedNightMood from "../Pages/Safety/AutomatedNightMood";
 import AutoBlockUnsafeDriver from "../Pages/Safety/AutoBlockUnsafeDriver";
 import SafetyChecklist from "../Pages/Safety/SafetyChecklist";
+import ComfortFilter from "../Pages/Safety/ComfortFilter";
+
+import Profile from "../Pages/Profile/Profile";
+
+import AvailableRides from "../Pages/AvailableRides/AvailableRides";
+import Booking from "../Pages/Booking/Booking";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +43,11 @@ const router = createBrowserRouter([
   {
     path: "/ride-management",
     element: <RideManagement />,
+  },
+
+  {
+    path: "/profile",
+    element: <Profile />,
   },
 
   {
@@ -117,6 +128,21 @@ const router = createBrowserRouter([
   {
     path: "/safety-checklist",
     element: <SafetyChecklist />,
+  },
+
+  {
+    path: "/comfort-filter",
+    element: <ComfortFilter />,
+  },
+
+  {
+    path: "/available-rides",
+    element: <AvailableRides />,
+  },
+
+  {
+    path: "/booking",
+    element: <Booking />,
   },
 ]);
 

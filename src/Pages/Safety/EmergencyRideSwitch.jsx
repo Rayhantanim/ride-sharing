@@ -1,46 +1,213 @@
-import React, { useState, useEffect } from "react";
-import "./EmergencyRideSwitch.css";
-import { FaArrowLeft } from "react-icons/fa";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./EmergencyRideSwitch.css";
 
-const MapPinIcon = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="#65A30D">
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-  </svg>
-);
+const API_URL = "http://localhost:5000/api/safety";
+const TIMER_DURATION = 30;
+const CIRCUMFERENCE = 2 * Math.PI * 25;
 
-const EmergencyRideSwitch = () => {
+// Find the logged-in user's ID from common localStorage formats.
+function getLoggedInUserId() {
+  const directId =
+    localStorage.getItem("userId") || localStorage.getItem("userID");
+
+  if (directId) return directId;
+
+  const possibleKeys = ["user", "currentUser", "userData", "userInfo"];
+
+  for (const key of possibleKeys) {
+    const rawValue = localStorage.getItem(key);
+
+    if (!rawValue) continue;
+
+    try {
+      const user = JSON.parse(rawValue);
+      const id = user?._id || user?.id || user?.userId;
+
+      if (id) return String(id);
+    } catch {
+      // This storage item was not JSON, so check the next one.
+    }
+  }
+
+  return null;
+}
+
+export default function EmergencyRideSwitch() {
   const navigate = useNavigate();
+  const timerRef = useRef(null);
+  const requestIdRef = useRef("");
 
-  const [seconds, setSeconds] = useState(30);
   const [requested, setRequested] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [seconds, setSeconds] = useState(TIMER_DURATION);
+  const [requestId, setRequestId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
+  // Clean up the countdown if the user leaves the page.
   useEffect(() => {
-    if (seconds > 0 && !cancelled) {
-      const timer = setTimeout(() => {
-        setSeconds((prev) => prev - 1);
-      }, 1000);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
-      return () => clearTimeout(timer);
+  const startCountdown = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
-  }, [seconds, cancelled]);
 
-  const handleRequestDriver = () => {
-    setRequested(true);
-    setCancelled(false);
-    setSeconds(30);
+    setSeconds(TIMER_DURATION);
+
+    timerRef.current = setInterval(() => {
+      setSeconds((previousSeconds) => {
+        if (previousSeconds <= 1) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          return 0;
+        }
+
+        return previousSeconds - 1;
+      });
+    }, 1000);
   };
 
-  const handleCancel = () => {
-    setCancelled(true);
+  // Send a new request to the backend.
+  const handleRequestDriver = async () => {
+    const userId = getLoggedInUserId();
+
+    if (!userId) {
+      setErrorMessage(
+        "User ID was not found. Please check how your login page saves the user ID.",
+      );
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+    setStatusMessage("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/${encodeURIComponent(userId)}/emergency-ride-switch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "request",
+          }),
+        },
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Could not submit the new-driver request.",
+        );
+      }
+
+      if (!data.requestId) {
+        throw new Error(
+          "The server did not return a request ID. Please check your backend route.",
+        );
+      }
+
+      requestIdRef.current = String(data.requestId);
+      setRequestId(String(data.requestId));
+      setRequested(true);
+      setCancelled(false);
+      setStatusMessage(data.message || "Your request has been recorded.");
+
+      startCountdown();
+    } catch (error) {
+      setErrorMessage(error.message || "Could not connect to the backend.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel the request while the 30-second window is open.
+  const handleCancel = async () => {
+    const userId = getLoggedInUserId();
+    const currentRequestId = requestIdRef.current;
+
+    if (!userId || !currentRequestId) {
+      setErrorMessage(
+        "Request information is missing. Please submit a new request.",
+      );
+      return;
+    }
+
+    if (seconds <= 0) {
+      setErrorMessage("The 30-second cancellation window has ended.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/${encodeURIComponent(userId)}/emergency-ride-switch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "cancel",
+            requestId: currentRequestId,
+          }),
+        },
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Could not cancel the request.");
+      }
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      setCancelled(true);
+      setRequested(false);
+      setSeconds(0);
+      setStatusMessage(data.message || "Your cancellation has been recorded.");
+
+      requestIdRef.current = "";
+      setRequestId("");
+    } catch (error) {
+      setErrorMessage(error.message || "Could not cancel the request.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     setRequested(false);
+    setCancelled(false);
+    setSeconds(TIMER_DURATION);
+    setRequestId("");
+    requestIdRef.current = "";
+    setStatusMessage("");
+    setErrorMessage("");
   };
 
-  const radius = 26;
-  const circumference = 2 * Math.PI * radius;
-
-  const strokeDashoffset = circumference - (seconds / 30) * circumference;
+  const progressOffset = CIRCUMFERENCE * (1 - seconds / TIMER_DURATION);
 
   return (
     <div className="page-wrapper">
@@ -53,98 +220,150 @@ const EmergencyRideSwitch = () => {
             onClick={() => navigate("/safety-preview")}
             aria-label="Go back"
           >
-            <FaArrowLeft className="back-icon" />
+            <span className="back-icon">←</span>
           </button>
 
           <h1 className="header-title">Emergency Ride Switch</h1>
         </header>
 
-        {/* Illustration */}
-        <div className="illustration-container">
-          <MapPinIcon className="map-pin left" />
+        {/* Car and route illustration */}
+        <div className="illustration-container" aria-hidden="true">
+          <div className="map-pin left">
+            <span style={{ fontSize: 38 }}>📍</span>
+          </div>
 
-          <MapPinIcon className="map-pin right" />
+          <div className="map-pin right">
+            <span style={{ fontSize: 38 }}>📍</span>
+          </div>
 
           <div className="dashed-path-left"></div>
-
           <div className="dashed-path-right"></div>
-
           <div className="cloud-background"></div>
 
-          {/* Car */}
           <div className="car-wrapper">
-            <div className="car-body"></div>
-
             <div className="car-roof"></div>
-
             <div className="car-window"></div>
 
-            <div className="car-headlight"></div>
+            <div className="car-body">
+              <div className="car-headlight"></div>
+            </div>
 
             <div className="wheel-front"></div>
-
             <div className="wheel-back"></div>
           </div>
         </div>
 
-        {/* Main Text */}
+        {/* Main text */}
         <h2 className="main-text">
-          {requested
-            ? "Your request for a new driver has been sent."
-            : "Get a new Driver if you feel unsafe or uncomfortable"}
+          Get a new Driver if you feel unsafe or uncomfortable
         </h2>
 
-        {/* Request Button */}
-        {!requested ? (
+        {/* Request button */}
+        {!requested && !cancelled && (
           <button
             type="button"
             className="primary-button"
             onClick={handleRequestDriver}
+            disabled={loading}
           >
-            Request New Driver
+            {loading ? "Please wait..." : "Request New Driver"}
           </button>
-        ) : (
+        )}
+
+        {/* Cancel button */}
+        {requested && (
           <button
             type="button"
             className="cancel-button"
             onClick={handleCancel}
+            disabled={loading || seconds <= 0}
           >
-            Cancel Request
+            {loading
+              ? "Please wait..."
+              : seconds > 0
+                ? `Cancel Request (${seconds}s)`
+                : "Cancellation Window Closed"}
           </button>
         )}
 
-        {/* Timer */}
-        <div className="timer-container">
-          <p className="timer-text">
-            {requested && !cancelled
-              ? "You Can Cancel The"
-              : "You Can Cancel The"}
-            <br />
-            Request Within 30s
-          </p>
+        {/* Circular countdown timer */}
+        {requested && (
+          <div className="timer-container">
+            <p className="timer-text">
+              {seconds > 0
+                ? "Your request has been recorded. You can cancel within 30 seconds."
+                : "The cancellation window has ended."}
+            </p>
 
-          <div className="timer-circle-wrapper">
-            <svg className="timer-svg" viewBox="0 0 60 60">
-              <circle className="timer-circle-bg" cx="30" cy="30" r={radius} />
+            <div className="timer-circle-wrapper">
+              <svg className="timer-svg" viewBox="0 0 60 60" aria-hidden="true">
+                <circle className="timer-circle-bg" cx="30" cy="30" r="25" />
 
-              <circle
-                className="timer-circle-progress"
-                cx="30"
-                cy="30"
-                r={radius}
-                style={{
-                  strokeDasharray: circumference,
-                  strokeDashoffset: strokeDashoffset,
-                }}
-              />
-            </svg>
+                <circle
+                  className="timer-circle-progress"
+                  cx="30"
+                  cy="30"
+                  r="25"
+                  style={{
+                    strokeDasharray: CIRCUMFERENCE,
+                    strokeDashoffset: progressOffset,
+                  }}
+                />
+              </svg>
 
-            <span className="timer-seconds">{seconds}s</span>
+              <span className="timer-seconds">{seconds}</span>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Request status */}
+        {requested && (
+          <div
+            className={`request-status ${seconds > 0 ? "pending" : "expired"}`}
+            role="status"
+          >
+            <h3>
+              {seconds > 0 ? "✓ Request Pending" : "Cancellation Window Closed"}
+            </h3>
+
+            <p>
+              {seconds > 0
+                ? statusMessage
+                : "Your request was recorded, but a replacement driver has not been confirmed."}
+            </p>
+
+            {requestId && <p className="request-id">Request ID: {requestId}</p>}
+          </div>
+        )}
+
+        {/* Cancellation confirmation */}
+        {cancelled && (
+          <div className="request-status cancelled" role="status">
+            <h3>✓ Request Cancelled</h3>
+            <p>{statusMessage}</p>
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={handleReset}
+            >
+              Make Another Request
+            </button>
+          </div>
+        )}
+
+        {/* Error message */}
+        {errorMessage && (
+          <div className="request-error" role="alert">
+            {errorMessage}
+          </div>
+        )}
+
+        <p className="footer-note">
+          This feature records your request. It does not automatically assign or
+          confirm a replacement driver.
+        </p>
       </div>
     </div>
   );
-};
-
-export default EmergencyRideSwitch;
+}

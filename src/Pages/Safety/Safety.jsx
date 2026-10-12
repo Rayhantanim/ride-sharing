@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Safety.css";
 
@@ -17,6 +17,17 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 
+const SAFETY_API = "http://localhost:5000/api/safety";
+
+const getUserId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    return user?.id || user?._id || null;
+  } catch {
+    return null;
+  }
+};
+
 const SafetyCard = ({ icon, title, subtitle, iconBg, iconColor, onClick }) => (
   <div
     className="card"
@@ -25,19 +36,15 @@ const SafetyCard = ({ icon, title, subtitle, iconBg, iconColor, onClick }) => (
     tabIndex={onClick ? 0 : undefined}
     onKeyDown={(e) => {
       if (onClick && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
         onClick();
       }
     }}
-    style={{
-      cursor: onClick ? "pointer" : "default",
-    }}
+    style={{ cursor: onClick ? "pointer" : "default" }}
   >
     <div
       className="card-icon-wrapper"
-      style={{
-        backgroundColor: iconBg,
-        color: iconColor,
-      }}
+      style={{ backgroundColor: iconBg, color: iconColor }}
     >
       {icon}
     </div>
@@ -53,7 +60,114 @@ const SafetyCard = ({ icon, title, subtitle, iconBg, iconColor, onClick }) => (
 
 const SafetyScreen = () => {
   const navigate = useNavigate();
-  const [nightMode, setNightMode] = useState(true);
+
+  const [nightMode, setNightMode] = useState(false);
+  const [loadingNightMode, setLoadingNightMode] = useState(true);
+  const [savingNightMode, setSavingNightMode] = useState(false);
+
+  // Load the saved Night Mode value
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSafetySettings = async () => {
+      const userId = getUserId();
+
+      if (!userId) {
+        setLoadingNightMode(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${SAFETY_API}/${userId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Could not load safety settings.");
+        }
+
+        const safety = data.safety || data.data || data;
+
+        if (!cancelled) {
+          setNightMode(
+            typeof safety?.automatedNightMode === "boolean"
+              ? safety.automatedNightMode
+              : false,
+          );
+        }
+      } catch (error) {
+        console.error("Load Night Mode error:", error);
+      } finally {
+        if (!cancelled) {
+          setLoadingNightMode(false);
+        }
+      }
+    };
+
+    loadSafetySettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Save Night Mode ON/OFF
+  const handleNightModeToggle = async (e) => {
+    e.stopPropagation();
+
+    // Prevent clicks before loading finishes or while saving
+    if (loadingNightMode || savingNightMode) {
+      return;
+    }
+
+    const userId = getUserId();
+
+    if (!userId) {
+      window.alert("Please log in first to save your safety settings.");
+      return;
+    }
+
+    const nextValue = !nightMode;
+
+    setSavingNightMode(true);
+
+    try {
+      const response = await fetch(`${SAFETY_API}/${userId}/settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          automatedNightMode: nextValue,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Could not save Night Mode.");
+      }
+
+      // Backend returns { message, safety }
+      const savedSafety = data.safety || data.data?.safety;
+
+      if (typeof savedSafety?.automatedNightMode === "boolean") {
+        setNightMode(savedSafety.automatedNightMode);
+      } else {
+        // Fall back to the requested value if the response
+        // does not contain the saved safety document.
+        setNightMode(nextValue);
+      }
+    } catch (error) {
+      console.error("Save Night Mode error:", error);
+
+      window.alert(
+        error.message ||
+          "Could not save the setting. Please check the backend server.",
+      );
+    } finally {
+      setSavingNightMode(false);
+    }
+  };
 
   return (
     <div className="app-container">
@@ -63,15 +177,11 @@ const SafetyScreen = () => {
           className="back-icon"
           onClick={() => navigate("/home")}
         />
-
         <h1>Safety</h1>
       </header>
 
       <main className="content-scroll">
-        {/* =========================
-            SOS BANNER
-        ========================= */}
-
+        {/* SOS BANNER */}
         <div className="sos-banner">
           <button
             type="button"
@@ -87,19 +197,13 @@ const SafetyScreen = () => {
             style={{ cursor: "pointer" }}
           >
             <span className="sos-label">EMERGENCY??</span>
-
             <h2>NEED HELP RIGHT NOW?</h2>
-
             <p>Tap the button to alert your trusted contact and us.</p>
           </div>
         </div>
 
-        {/* =========================
-            QUICK ACTIONS
-        ========================= */}
-
+        {/* QUICK ACTIONS */}
         <div className="quick-actions">
-          {/* Silent SOS */}
           <div
             className="action-card green-tint"
             onClick={() => navigate("/silent-sos")}
@@ -107,6 +211,7 @@ const SafetyScreen = () => {
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 navigate("/silent-sos");
               }
             }}
@@ -118,14 +223,12 @@ const SafetyScreen = () => {
 
             <div className="action-text">
               <h3>Silent SOS</h3>
-
               <p>Alert us in an emergency situation.</p>
             </div>
 
             <FaChevronRight className="chevron" />
           </div>
 
-          {/* Safety Checklist */}
           <div
             className="action-card blue-tint"
             onClick={() => navigate("/safety-checklist")}
@@ -133,6 +236,7 @@ const SafetyScreen = () => {
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 navigate("/safety-checklist");
               }
             }}
@@ -144,7 +248,6 @@ const SafetyScreen = () => {
 
             <div className="action-text">
               <h3>Safety Checklist</h3>
-
               <p>Check the important safety items.</p>
             </div>
 
@@ -152,18 +255,10 @@ const SafetyScreen = () => {
           </div>
         </div>
 
-        {/* =========================
-            SECTION TITLE
-        ========================= */}
-
+        {/* STAY PROTECTED */}
         <h2 className="section-title">Stay Protected</h2>
 
-        {/* =========================
-            SAFETY CARDS
-        ========================= */}
-
         <div className="grid-container">
-          {/* Trusted Circle */}
           <SafetyCard
             icon={<FaUsers />}
             title="Trusted Circle"
@@ -173,7 +268,6 @@ const SafetyScreen = () => {
             onClick={() => navigate("/trusted-circle")}
           />
 
-          {/* Discomfort Report */}
           <SafetyCard
             icon={<FaExclamationCircle />}
             title="Discomfort Report"
@@ -183,7 +277,6 @@ const SafetyScreen = () => {
             onClick={() => navigate("/discomfort-report")}
           />
 
-          {/* Emergency Ride Switch */}
           <SafetyCard
             icon={<FaSyncAlt />}
             title="Emergency Ride Switch"
@@ -193,7 +286,6 @@ const SafetyScreen = () => {
             onClick={() => navigate("/emergency-ride-switch")}
           />
 
-          {/* Auto Block Unsafe Driver */}
           <SafetyCard
             icon={<FaShieldAlt />}
             title="Auto Block Unsafe Driver"
@@ -203,7 +295,6 @@ const SafetyScreen = () => {
             onClick={() => navigate("/auto-block-unsafe-driver")}
           />
 
-          {/* Female Driver Preference */}
           <SafetyCard
             icon={<FaUser />}
             title="Female Driver Preference"
@@ -213,7 +304,6 @@ const SafetyScreen = () => {
             onClick={() => navigate("/female-driver-preferences")}
           />
 
-          {/* Comfort Filter */}
           <SafetyCard
             icon={<FaSlidersH />}
             title="Comfort Filter"
@@ -224,10 +314,7 @@ const SafetyScreen = () => {
           />
         </div>
 
-        {/* =========================
-            NIGHT MODE
-        ========================= */}
-
+        {/* AUTOMATED NIGHT MODE */}
         <div
           className="full-width-card"
           onClick={() => navigate("/automated-night-mode")}
@@ -235,6 +322,7 @@ const SafetyScreen = () => {
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
               navigate("/automated-night-mode");
             }
           }}
@@ -252,29 +340,29 @@ const SafetyScreen = () => {
 
           <div className="card-content">
             <h4>Automated Night Mode</h4>
-
             <p>
               Extra safety features automatically activate during late-night
               rides.
             </p>
           </div>
 
-          {/* Toggle */}
           <div
             className={`toggle-switch ${nightMode ? "active" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setNightMode(!nightMode);
+            role="switch"
+            aria-checked={nightMode}
+            aria-label="Automated Night Mode"
+            aria-disabled={loadingNightMode || savingNightMode}
+            onClick={handleNightModeToggle}
+            style={{
+              cursor: loadingNightMode || savingNightMode ? "wait" : "pointer",
+              opacity: loadingNightMode || savingNightMode ? 0.6 : 1,
             }}
           >
             <div className="toggle-circle"></div>
           </div>
         </div>
 
-        {/* =========================
-            FOOTER
-        ========================= */}
-
+        {/* FOOTER */}
         <div className="full-width-card footer-card">
           <div
             className="card-icon-wrapper"
@@ -288,12 +376,10 @@ const SafetyScreen = () => {
 
           <div className="card-content">
             <h4>Your safety is our top priority</h4>
-
             <p>We are here to keep you safe every step of the way.</p>
           </div>
 
           <FaShieldAlt className="footer-shield" />
-
           <FaChevronRight className="chevron" />
         </div>
       </main>
