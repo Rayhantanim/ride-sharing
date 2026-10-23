@@ -1,19 +1,51 @@
-import { useState, useMemo } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; 
+import React, { useState, useMemo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import RoleToggle from '../../components/RoleToggle';
+
+// 🆕 Moved OUTSIDE the main component to prevent focus loss
+const InputField = ({ name, type = 'text', placeholder, required, value, onChange, children, readOnly }) => (
+  <div className="flex flex-col gap-1.5">
+    {children}
+    <div className="relative">
+      <input
+        key={`input-${name}`} // 🆕 Stable key
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required={required}
+        readOnly={readOnly}
+        className={`w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF] ${
+          readOnly ? 'bg-gray-50 cursor-not-allowed' : ''
+        }`}
+      />
+    </div>
+  </div>
+);
 
 const CreateAccount = () => {
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
 
   const preselectedPhone = location.state?.phone || '';
+  const preselectedRole = location.state?.role || 'passenger';
 
   const [formData, setFormData] = useState({
     fullName: '',
-    phone: preselectedPhone, // 🆕 prefill
+    gender: '', // 🆕 Added gender
+    phone: preselectedPhone,
     email: '',
     password: '',
+    vehicleMake: '',
+    vehicleModel: '',
+    vehicleColor: '',
+    vehiclePlate: '',
+    vehicleYear: '',
   });
+  
+  const [role, setRole] = useState(preselectedRole);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,39 +65,66 @@ const CreateAccount = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(''); // 🆕 Clear error on type
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
+    if (!formData.gender) {
+      setError('Please select your gender.');
+      return;
+    }
+
     if (!passwordValid) {
       setError('Password must be at least 8 characters and include one uppercase letter and one number.');
       return;
     }
 
+    if (role === 'driver') {
+      if (!formData.vehicleMake || !formData.vehicleModel || !formData.vehiclePlate) {
+        setError('Please fill in vehicle make, model, and plate number.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      console.log('📤 Signing up with:', {
+      const payload = {
         fullName: formData.fullName,
-        phone: formData.phone,
-        email: formData.email,
-      });
-
-      const { data } = await axios.post(`${API}/api/auth/signup`, {
-        fullName: formData.fullName,
+        gender: formData.gender, // 🆕 Send gender
         phone: formData.phone,
         email: formData.email,
         password: formData.password,
-      });
+        role,
+      };
+
+      if (role === 'driver') {
+        payload.vehicle = {
+          make: formData.vehicleMake,
+          model: formData.vehicleModel,
+          color: formData.vehicleColor,
+          plateNumber: formData.vehiclePlate,
+          year: formData.vehicleYear ? Number(formData.vehicleYear) : undefined,
+        };
+      }
+
+      console.log('📤 Signing up with:', { ...payload, password: '••••' });
+
+      const { data } = await axios.post(`${API}/api/auth/signup`, payload);
 
       console.log('✅ Signup success:', data);
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      navigate('/home');
+      if (data.user.role === 'driver') {
+        navigate('/driver');
+      } else {
+        navigate('/home');
+      }
     } catch (err) {
       console.error('❌ Signup error:', err.response?.data || err.message);
       setError(
@@ -76,26 +135,9 @@ const CreateAccount = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    setError('Google sign-in is not available. Please use email/password.');
-  };
-
   const RequirementRow = ({ label, met }) => (
-    <div
-      className={`flex items-center gap-2 text-[13px] font-medium transition-colors ${
-        met ? 'text-[#8EB800]' : 'text-[#9CA3AF]'
-      }`}
-    >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+    <div className={`flex items-center gap-2 text-[13px] font-medium transition-colors ${met ? 'text-[#8EB800]' : 'text-[#9CA3AF]'}`}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         {met ? (
           <>
             <circle cx="12" cy="12" r="10" />
@@ -117,7 +159,7 @@ const CreateAccount = () => {
     <div className="min-h-screen bg-white flex justify-center px-4 py-8">
       <div className="w-full max-w-[500px] flex flex-col">
         {/* Header section */}
-        <div className="relative flex items-center justify-center pb-8">
+        <div className="relative flex items-center justify-center pb-6">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -135,47 +177,59 @@ const CreateAccount = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Full Name */}
-          <div className="flex flex-col gap-1.5">
+        <RoleToggle role={role} onChange={setRole} />
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-4">
+          
+          <InputField 
+            name="fullName" 
+            placeholder="Enter your full name" 
+            required 
+            value={formData.fullName}
+            onChange={handleChange}
+          >
             <label className="text-[13px] font-semibold text-[#1D1D1D]">Full Name</label>
+          </InputField>
+
+          {/* 🆕 Gender Field */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-[#1D1D1D]">Gender</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/4 text-[#8EB800]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </span>
-              <input
-                name="fullName"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.fullName}
+              <select
+                key="input-gender"
+                name="gender"
+                value={formData.gender}
                 onChange={handleChange}
                 required
-                autoFocus={!!preselectedPhone}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-[#E5E7EB] rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF]"
-              />
+                className={`w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm appearance-none ${
+                  !formData.gender ? 'text-[#9CA3AF]' : ''
+                }`}
+              >
+                <option value="" disabled>Select your gender</option>
+                <option value="male" className="text-[#1D1D1D]">Male</option>
+                <option value="female" className="text-[#1D1D1D]">Female</option>
+                <option value="other" className="text-[#1D1D1D]">Other</option>
+                <option value="prefer_not_to_say" className="text-[#1D1D1D]">Prefer not to say</option>
+              </select>
+              {/* Custom dropdown arrow */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#9CA3AF]">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                </svg>
+              </div>
             </div>
           </div>
 
-          {/* 🆕 Phone — prefilled from /phone-signup */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#1D1D1D] flex items-center justify-between">
               <span>Phone number</span>
               {preselectedPhone && (
-                <span className="text-[11px] text-[#8EB800] font-medium">
-                  ✓ From previous step
-                </span>
+                <span className="text-[11px] text-[#8EB800] font-medium">✓ From previous step</span>
               )}
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/4 text-[#8EB800]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>
-              </span>
               <input
+                key="input-phone" // 🆕 Stable key
                 name="phone"
                 type="tel"
                 placeholder="Enter your phone number"
@@ -183,17 +237,15 @@ const CreateAccount = () => {
                 onChange={handleChange}
                 required
                 readOnly={!!preselectedPhone}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF] ${
-                  preselectedPhone
-                    ? 'bg-gray-50 border-[#E5E7EB] cursor-not-allowed'
-                    : 'bg-white border-[#E5E7EB]'
+                className={`w-full px-4 py-3 border rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF] ${
+                  preselectedPhone ? 'bg-gray-50 border-[#E5E7EB] cursor-not-allowed' : 'bg-white border-[#E5E7EB]'
                 }`}
               />
               {preselectedPhone && (
                 <button
                   type="button"
-                  onClick={() => navigate('/phone-signup')}
-                  className="absolute right-3 top-1/4 text-[11px] text-[#8EB800] font-semibold hover:underline"
+                  onClick={() => navigate('/phone-signup?role=' + role)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#8EB800] font-semibold hover:underline"
                 >
                   Edit
                 </button>
@@ -201,65 +253,108 @@ const CreateAccount = () => {
             </div>
           </div>
 
-          {/* Email */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-[#1D1D1D]">Email ( Optional )</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/4 text-[#8EB800]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                  <path d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                </svg>
-              </span>
-              <input
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-[#E5E7EB] rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF]"
-              />
-            </div>
-          </div>
+          <InputField 
+            name="email" 
+            type="email" 
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+          >
+            <label className="text-[13px] font-semibold text-[#1D1D1D]">
+              Email <span className="text-[#9CA3AF] font-normal">(Optional)</span>
+            </label>
+          </InputField>
 
-          {/* Password */}
-          <div className="flex flex-col gap-1.5">
+          <InputField 
+            name="password" 
+            type="password" 
+            placeholder="Enter your Password" 
+            required
+            value={formData.password}
+            onChange={handleChange}
+          >
             <label className="text-[13px] font-semibold text-[#1D1D1D]">Password</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/4 text-[#8EB800]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-              </span>
-              <input
-                name="password"
-                type="password"
-                placeholder="Enter your Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={8}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-[#E5E7EB] rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF]"
-              />
-            </div>
-          </div>
+          </InputField>
 
-          {/* Password Requirements */}
           <div className="flex flex-col gap-1.5 mt-1">
             <RequirementRow label="At least 8 characters" met={passwordChecks.length} />
             <RequirementRow label="One uppercase letter" met={passwordChecks.uppercase} />
             <RequirementRow label="One number" met={passwordChecks.number} />
           </div>
 
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {role === 'driver' && (
+            <div className="flex flex-col gap-4 pt-4 border-t border-[#F0F1F3]">
+              <div>
+                <h3 className="text-[15px] font-bold text-[#1D1D1D]">Vehicle Information</h3>
+                <p className="text-[12px] text-[#6B7280] mt-0.5">Required for drivers. Passengers will see this when you accept their ride.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <InputField 
+                  name="vehicleMake" 
+                  placeholder="Toyota" 
+                  required={role === 'driver'}
+                  value={formData.vehicleMake}
+                  onChange={handleChange}
+                >
+                  <label className="text-[13px] font-semibold text-[#1D1D1D]">Make</label>
+                </InputField>
+                <InputField 
+                  name="vehicleModel" 
+                  placeholder="Corolla" 
+                  required={role === 'driver'}
+                  value={formData.vehicleModel}
+                  onChange={handleChange}
+                >
+                  <label className="text-[13px] font-semibold text-[#1D1D1D]">Model</label>
+                </InputField>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <InputField 
+                  name="vehicleColor" 
+                  placeholder="White"
+                  value={formData.vehicleColor}
+                  onChange={handleChange}
+                >
+                  <label className="text-[13px] font-semibold text-[#1D1D1D]">Color</label>
+                </InputField>
+                <InputField 
+                  name="vehiclePlate" 
+                  placeholder="ND22GB" 
+                  required={role === 'driver'}
+                  value={formData.vehiclePlate}
+                  onChange={handleChange}
+                >
+                  <label className="text-[13px] font-semibold text-[#1D1D1D]">Plate number</label>
+                </InputField>
+              </div>
+
+              <InputField 
+                name="vehicleYear" 
+                type="number" 
+                placeholder="2022"
+                value={formData.vehicleYear}
+                onChange={handleChange}
+              >
+                <label className="text-[13px] font-semibold text-[#1D1D1D]">
+                  Year <span className="text-[#9CA3AF] font-normal">(optional)</span>
+                </label>
+              </InputField>
+            </div>
+          )}
+
+          {/* 🆕 Reserved space prevents layout shift when error appears */}
+          <div className="min-h-[20px] flex items-center">
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#8EB800] text-white font-semibold py-3 rounded-md hover:bg-[#7aa300] transition disabled:opacity-50"
+            className="w-full bg-[#8EB800] text-white font-semibold py-3 rounded-md hover:bg-[#7aa300] transition disabled:opacity-50 mt-2"
           >
-            {loading ? 'Creating account...' : 'Create Account'}
+            {loading ? 'Creating account...' : `Create ${role === 'driver' ? 'Driver' : 'Passenger'} Account`}
           </button>
 
           <div className="relative flex items-center py-2 mt-1">
@@ -271,7 +366,7 @@ const CreateAccount = () => {
           <div className="flex gap-4">
             <button
               type="button"
-              onClick={handleGoogleSignIn}
+              onClick={() => setError('Google sign-in is not available. Please use email/password.')}
               className="flex-1 bg-[#F3F4F6] text-[#1877F2] text-[14px] font-medium py-3 rounded-md flex items-center justify-center gap-2 hover:bg-gray-200 transition"
             >
               <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">

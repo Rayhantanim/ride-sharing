@@ -28,6 +28,9 @@ import Profile from "../Pages/Profile/Profile";
 
 import AvailableRides from "../Pages/AvailableRides/AvailableRides";
 import Booking from "../Pages/Booking/Booking";
+import DriverDashboard from "../Pages/Driver/DriverDashboard";
+import DriverVerification from "../Pages/Driver/DriverVerification";
+import AdminVerifications from "../Pages/Admin/AdminVerifications";
 
 const router = createBrowserRouter([
   {
@@ -144,6 +147,21 @@ const router = createBrowserRouter([
     path: "/booking",
     element: <Booking />,
   },
+
+  // Driver
+  {
+    path:"/driver",
+    element: <DriverDashboard/>
+  },
+  { path:"/driver/verification" ,
+    element:<DriverVerification/>
+
+
+  },
+  {
+    path:"/admin/verifications",
+    element:<AdminVerifications />
+  }
 ]);
 
 export default router;

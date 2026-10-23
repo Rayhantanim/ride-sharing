@@ -7,14 +7,17 @@ const userSchema = new mongoose.Schema(
       required: [true, "Full name is required"],
       trim: true,
     },
-
     phone: {
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
       unique: true,
     },
-
+    gender: {
+  type: String,
+  enum: ["male", "female", "other", "prefer_not_to_say"],
+  required: [true, "Gender is required"],
+},
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -23,42 +26,48 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
-
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [8, "Password must be at least 8 characters"],
-      validate: [
-        {
-          validator: (value) => /[A-Z]/.test(value),
-          message: "Password must contain at least one uppercase letter",
-        },
-        {
-          validator: (value) => /[0-9]/.test(value),
-          message: "Password must contain at least one number",
-        },
-      ],
       select: false,
     },
 
-    // Used for female driver preference filtering
-    gender: {
+    // ── Role ──────────────────────────────
+    role: {
       type: String,
-      enum: ["female", "male", "other", "unspecified"],
-      default: "unspecified",
-      lowercase: true,
-      trim: true,
+      enum: ["passenger", "driver", "admin"],
+      default: "passenger",
+      required: true,
     },
 
-    provider: {
+    // ── 🆕 Verification Status ────────────
+    verificationStatus: {
       type: String,
-      enum: ["password", "google"],
-      default: "password",
+      enum: ["unverified", "pending", "approved", "rejected"],
+      default: "unverified",
     },
+
+    // ── Driver-only vehicle info ──────────
+    vehicle: {
+      make: { type: String, trim: true },
+      model: { type: String, trim: true },
+      color: { type: String, trim: true },
+      plateNumber: { type: String, trim: true },
+      year: { type: Number },
+    },
+
+    // ── Stats ─────────────────────────────
+    rating: { type: Number, default: 5.0 },
+    totalRides: { type: Number, default: 0 },
+    isOnline: { type: Boolean, default: false },
+    isDriver: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true }
 );
+
+// ✅ Modern Mongoose — no `next` callback
+userSchema.pre("save", function () {
+  this.isDriver = this.role === "driver";
+});
 
 module.exports = mongoose.model("User", userSchema);

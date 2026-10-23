@@ -7,7 +7,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    identifier: '', // phone or email
+    identifier: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
@@ -16,57 +16,49 @@ const Login = () => {
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (error) setError(''); // Clear error as soon as user types
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  const payload = {
-    identifier: formData.identifier.trim(),
-    password: formData.password,
+    try {
+      const { data } = await axios.post(`${API}/api/auth/login`, {
+        identifier: formData.identifier.trim(),
+        password: formData.password,
+      });
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Route based on role
+      if (data.user.role === 'driver') {
+        navigate('/driver');
+      } else if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || 'Unable to log in.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
-
-  console.log('📤 Sending login request to:', `${API}/api/auth/login`);
-  console.log('📦 Payload:', payload);
-
-  try {
-    const { data } = await axios.post(`${API}/api/auth/login`, payload);
-
-    console.log('✅ Login response:', data);
-
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-
-    console.log('💾 Saved to localStorage:', {
-      token: data.token?.slice(0, 20) + '...',
-      user: data.user,
-    });
-
-    navigate('/home');
-  } catch (err) {
-    console.error('❌ Login failed:', {
-      status: err.response?.status,
-      statusText: err.response?.statusText,
-      data: err.response?.data,
-      message: err.message,
-    });
-
-    setError(
-      err.response?.data?.message ||
-        err.message ||
-        'Unable to log in. Please try again.'
-    );
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-[420px] flex flex-col items-center gap-6">
+        
         {/* Header: Logo & Tagline */}
         <div className="flex flex-col items-center gap-2">
           <svg
@@ -104,9 +96,10 @@ const handleSubmit = async (e) => {
 
         {/* Form Inputs */}
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 mt-2">
+          
           {/* Phone/Email Input */}
           <div className="relative w-full">
-            <span className="absolute left-4 top-1/4 text-[#8EB800]">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8EB800] pointer-events-none z-20">
               <svg
                 width="20"
                 height="20"
@@ -122,19 +115,22 @@ const handleSubmit = async (e) => {
               </svg>
             </span>
             <input
+              key="login-identifier"
               name="identifier"
               type="text"
               value={formData.identifier}
               onChange={handleChange}
               placeholder="Phone number or email"
               required
-              className="w-full pl-12 pr-4 py-3 bg-white border border-[#BED75D] rounded-lg outline-none focus:ring-2 focus:ring-[#8EB800] focus:border-transparent text-[#1D1D1D] text-sm placeholder:text-[#A2A9B4]"
+              autoComplete="username"
+              className="relative z-10 w-full pl-12 pr-4 py-3 bg-white border border-[#BED75D] rounded-lg outline-none focus:ring-2 focus:ring-[#8EB800] focus:border-transparent text-[#1D1D1D] text-sm placeholder:text-[#A2A9B4]"
             />
           </div>
 
           {/* Password Input */}
           <div className="relative w-full">
             <input
+              key="login-password"
               name="password"
               type="password"
               value={formData.password}
@@ -142,7 +138,8 @@ const handleSubmit = async (e) => {
               placeholder="Password"
               required
               minLength={8}
-              className="w-full px-4 py-3 bg-white border border-[#BED75D] rounded-lg outline-none focus:ring-2 focus:ring-[#8EB800] focus:border-transparent text-[#1D1D1D] text-sm placeholder:text-[#A2A9B4]"
+              autoComplete="current-password"
+              className="relative z-10 w-full px-4 py-3 bg-white border border-[#BED75D] rounded-lg outline-none focus:ring-2 focus:ring-[#8EB800] focus:border-transparent text-[#1D1D1D] text-sm placeholder:text-[#A2A9B4]"
             />
           </div>
 
@@ -156,10 +153,10 @@ const handleSubmit = async (e) => {
             </Link>
           </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
+          {/* 🆕 Error Message - Reserved space prevents DOM shifting that causes focus loss */}
+          <div className="min-h-[20px] flex items-center justify-center">
+            {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+          </div>
 
           {/* Log In Button */}
           <button

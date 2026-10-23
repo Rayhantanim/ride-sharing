@@ -1,11 +1,13 @@
 // PhoneSignup.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import carImg from '../../assets/yellow.jpg';
 import { countries, isoToFlagEmoji } from '../../data/countries';
 
 const PhoneSignup = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role') || 'passenger';
 
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
@@ -48,9 +50,9 @@ const PhoneSignup = () => {
       return;
     }
 
-    // 🆕 Navigate to CreateAccount, passing phone via router state
+    // Navigate to CreateAccount, passing phone AND role via router state
     navigate('/signup', {
-      state: { phone: normalized },
+      state: { phone: normalized, role },
     });
   };
 
@@ -73,7 +75,7 @@ const PhoneSignup = () => {
         </div>
 
         <h2 className="text-center text-[#1D1D1D] text-xl font-bold tracking-tight">
-          Enter your number
+          {role === 'driver' ? 'Enter your driver number' : 'Enter your number'}
         </h2>
 
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
