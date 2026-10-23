@@ -37,6 +37,102 @@ const XIcon = () => (
   </svg>
 );
 
+const LogoutIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 17l5-5-5-5" />
+    <path d="M15 12H3" />
+    <path d="M21 3v18" />
+  </svg>
+);
+
+/* ───────────────────────── Helpers ───────────────────────── */
+
+/**
+ * Wipes every known client-side artifact that could hold login data.
+ */
+const clearAllLoginData = () => {
+  const knownKeys = [
+    'token',
+    'accessToken',
+    'refreshToken',
+    'idToken',
+    'authToken',
+    'user',
+    'userData',
+    'currentUser',
+    'auth',
+    'authUser',
+    'session',
+    'jwt',
+    'profile',
+    'rememberMe',
+  ];
+
+  // localStorage
+  knownKeys.forEach((k) => {
+    try { localStorage.removeItem(k); } catch (_) {}
+  });
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (/auth|token|user|session|jwt|login|profile/i.test(key)) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (_) {}
+
+  // sessionStorage
+  knownKeys.forEach((k) => {
+    try { sessionStorage.removeItem(k); } catch (_) {}
+  });
+  try {
+    Object.keys(sessionStorage).forEach((key) => {
+      if (/auth|token|user|session|jwt|login|profile/i.test(key)) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (_) {}
+
+  // Cookies
+  try {
+    document.cookie
+      .split(';')
+      .map((c) => c.split('=')[0].trim())
+      .filter(Boolean)
+      .forEach((name) => {
+        if (/auth|token|user|session|jwt|login|profile/i.test(name)) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+        }
+      });
+  } catch (_) {}
+
+  // IndexedDB
+  try {
+    if (window.indexedDB?.databases) {
+      window.indexedDB.databases().then((dbs) => {
+        dbs.forEach((db) => {
+          if (db.name && /auth|token|user|session|login/i.test(db.name)) {
+            window.indexedDB.deleteDatabase(db.name);
+          }
+        });
+      });
+    }
+  } catch (_) {}
+
+  // Cache Storage
+  try {
+    if (window.caches?.keys) {
+      window.caches.keys().then((keys) => {
+        keys.forEach((key) => {
+          if (/auth|token|user|session|api/i.test(key)) {
+            window.caches.delete(key);
+          }
+        });
+      });
+    }
+  } catch (_) {}
+};
+
 /* ───────────────────────── Social Row ───────────────────────── */
 const SocialRow = ({ icon, name, id, onClick }) => (
   <button
@@ -72,6 +168,7 @@ const Profile = () => {
     email: 'youremail@gmail.com',
   });
   const [loading, setLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -95,6 +192,30 @@ const Profile = () => {
     //     .catch(() => {});
     // }
   }, []);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    try {
+      // 1. Optional backend call — invalidate server session
+      // await axios.post(
+      //   `${API}/api/auth/logout`,
+      //   {},
+      //   { withCredentials: true }
+      // );
+
+      // 2. Clear every client-side auth artifact
+      clearAllLoginData();
+
+      // 3. Redirect to login
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const socialLinks = [
     { icon: <FacebookIcon />, name: 'Facebook', id: 'Facebook ID' },
@@ -157,6 +278,17 @@ const Profile = () => {
                 className="w-full mt-10 bg-[#7DA600] hover:bg-[#6F9400] text-white font-semibold py-4 rounded-full text-[16px] transition shadow-sm"
               >
                 Edit Profile
+              </button>
+
+              {/* ── Logout button ── */}
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="w-full mt-4 flex items-center justify-center gap-3 border border-[#FCA5A5] text-[#DC2626] hover:bg-red-50 font-semibold py-4 rounded-full text-[16px] transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <LogoutIcon />
+                {isLoggingOut ? 'Logging out…' : 'Logout'}
               </button>
             </div>
           </section>

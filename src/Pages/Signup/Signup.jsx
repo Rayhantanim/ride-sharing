@@ -1,5 +1,5 @@
 import React from 'react';
-import img from '../../assets/image 107.jpg';
+import img from '../../assets/man.jpg';
 import { Link } from 'react-router-dom';
 
 /* ───── Role button ───── */
