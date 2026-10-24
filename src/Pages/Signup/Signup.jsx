@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import img from '../../assets/man.jpg';
 import { Link } from 'react-router-dom';
+
+/* ───── Language options ───── */
+const LANGUAGES = [
+  { code: 'en', label: 'ENG', full: 'English' },
+  { code: 'bn', label: 'বাংলা', full: 'Bangla' },
+  { code: 'es', label: 'ESP', full: 'Español' },
+  { code: 'fr', label: 'FRA', full: 'Français' },
+];
 
 /* ───── Role button ───── */
 const RoleButton = ({ to, icon, label, sublabel, variant = 'primary' }) => {
@@ -52,6 +60,41 @@ const RoleButton = ({ to, icon, label, sublabel, variant = 'primary' }) => {
 };
 
 const Signup = () => {
+  // 🆕 Language state
+  const [lang, setLang] = useState('en');
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // 🆕 Load saved language on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('language');
+    if (saved && LANGUAGES.some((l) => l.code === saved)) {
+      setLang(saved);
+    }
+  }, []);
+
+  // 🆕 Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowLangMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // 🆕 Change language handler
+  const handleLanguageChange = (code) => {
+    setLang(code);
+    setShowLangMenu(false);
+    localStorage.setItem('language', code);
+    // Optional: notify the rest of the app
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: code }));
+  };
+
+  const currentLang = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
+
   return (
     <div className="relative w-full min-h-screen overflow-hidden bg-black">
       {/* Background image */}
@@ -67,26 +110,69 @@ const Signup = () => {
 
       {/* Content wrapper */}
       <div className="relative z-20 min-h-screen flex flex-col justify-between items-center px-6 md:px-12 lg:px-16 xl:px-24 py-6 md:py-8">
-        {/* Top right: ENG + globe */}
+        {/* Top right: Language selector */}
         <div className="w-full flex justify-end">
-          <button className="flex items-center gap-2 text-white text-sm md:text-base font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] hover:opacity-90 transition">
-            <span>ENG</span>
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="w-5 h-5 md:w-6 md:h-6"
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowLangMenu((s) => !s)}
+              className="flex items-center gap-2 text-white text-sm md:text-base font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] hover:opacity-90 transition px-3 py-2 rounded-lg hover:bg-white/10"
             >
-              <path
-                d="M19.843 7.582C20.6039 8.92999 21.0025 10.4521 21 12C21 12.778 20.901 13.533 20.716 14.253C20.2159 16.1843 19.0886 17.8948 17.511 19.116C15.9335 20.3372 13.995 20.9999 12 21M4.157 7.582C3.42 8.887 3 10.395 3 12C2.99933 12.76 3.09475 13.517 3.284 14.253C3.78408 16.1843 4.91141 17.8948 6.48898 19.116C8.06654 20.3372 10.005 20.9999 12 21M12 21C14.485 21 16.5 16.97 16.5 12C16.5 7.03 14.485 3 12 3M12 21C9.515 21 7.5 16.97 7.5 12C7.5 7.03 9.515 3 12 3M20.716 14.253C18.0492 15.7314 15.0492 16.5048 12 16.5C8.838 16.5 5.867 15.685 3.284 14.253M12 3C13.5962 2.99933 15.1639 3.42336 16.5422 4.22856C17.9205 5.03377 19.0597 6.19117 19.843 7.582M12 3C10.4038 2.99933 8.83608 3.42336 7.45781 4.22856C6.07954 5.03377 4.94031 6.19117 4.157 7.582M19.843 7.582C17.6657 9.46793 14.8805 10.5041 12 10.5C9.002 10.5 6.26 9.4 4.157 7.582"
-                stroke="#FFFFFF"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+              <span>{currentLang.label}</span>
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="w-5 h-5 md:w-6 md:h-6"
+              >
+                <path
+                  d="M19.843 7.582C20.6039 8.92999 21.0025 10.4521 21 12C21 12.778 20.901 13.533 20.716 14.253C20.2159 16.1843 19.0886 17.8948 17.511 19.116C15.9335 20.3372 13.995 20.9999 12 21M4.157 7.582C3.42 8.887 3 10.395 3 12C2.99933 12.76 3.09475 13.517 3.284 14.253C3.78408 16.1843 4.91141 17.8948 6.48898 19.116C8.06654 20.3372 10.005 20.9999 12 21M12 21C14.485 21 16.5 16.97 16.5 12C16.5 7.03 14.485 3 12 3M12 21C9.515 21 7.5 16.97 7.5 12C7.5 7.03 9.515 3 12 3M20.716 14.253C18.0492 15.7314 15.0492 16.5048 12 16.5C8.838 16.5 5.867 15.685 3.284 14.253M12 3C13.5962 2.99933 15.1639 3.42336 16.5422 4.22856C17.9205 5.03377 19.0597 6.19117 19.843 7.582M12 3C10.4038 2.99933 8.83608 3.42336 7.45781 4.22856C6.07954 5.03377 4.94031 6.19117 4.157 7.582M19.843 7.582C17.6657 9.46793 14.8805 10.5041 12 10.5C9.002 10.5 6.26 9.4 4.157 7.582"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {/* 🆕 Small chevron to indicate dropdown */}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                className={`transition-transform ${showLangMenu ? 'rotate-180' : ''}`}
+              >
+                <path
+                  d="M6 9l6 6 6-6"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* 🆕 Language dropdown menu */}
+            {showLangMenu && (
+              <div className="absolute right-0 top-full mt-2 w-[180px] bg-white rounded-xl shadow-2xl overflow-hidden border border-[#E5E7EB] z-30">
+                {LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => handleLanguageChange(l.code)}
+                    className={`w-full flex items-center justify-between px-4 py-3 text-[14px] transition text-left ${
+                      lang === l.code
+                        ? 'bg-[#F4FBE8] text-[#8EB800] font-semibold'
+                        : 'text-[#1D1D1D] hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{l.full}</span>
+                    <span className="text-[12px] text-[#9CA3AF] font-mono">
+                      {l.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom block */}
@@ -107,7 +193,7 @@ const Signup = () => {
             Choose how you want to sign up
           </p>
 
-          {/* ── Three role buttons ─────────────────────── */}
+          {/* Three role buttons */}
           <div className="w-full flex flex-col items-center gap-3 md:gap-4 mt-2">
             <RoleButton
               to="/phone-signup"
