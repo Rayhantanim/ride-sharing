@@ -3,15 +3,17 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import RoleToggle from '../../components/RoleToggle';
 
-// 🆕 Moved OUTSIDE the main component to prevent focus loss
-const InputField = ({ name, type = 'text', placeholder, required, value, onChange, children, readOnly }) => (
+// 🆕 Updated InputField to perfectly center the password toggle
+const InputField = ({ 
+  name, type = 'text', placeholder, required, value, onChange, children, readOnly, showToggle, isShowing, onToggle 
+}) => (
   <div className="flex flex-col gap-1.5">
     {children}
     <div className="relative">
       <input
-        key={`input-${name}`} // 🆕 Stable key
+        key={`input-${name}`}
         name={name}
-        type={type}
+        type={showToggle ? (isShowing ? 'text' : 'password') : type}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -19,8 +21,34 @@ const InputField = ({ name, type = 'text', placeholder, required, value, onChang
         readOnly={readOnly}
         className={`w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg outline-none focus:ring-1 focus:ring-[#8EB800] focus:border-[#8EB800] text-[#1D1D1D] text-sm placeholder:text-[#9CA3AF] ${
           readOnly ? 'bg-gray-50 cursor-not-allowed' : ''
-        }`}
+        } ${showToggle ? 'pr-12' : ''}`}
       />
+      
+      {/* 🆕 FIXED: Full-height flex container to perfectly center the button */}
+      {showToggle && (
+        <div className="absolute inset-y-0 right-3 flex items-center z-20">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="text-gray-400 hover:text-[#8EB800] p-1 flex items-center justify-center"
+            aria-label={isShowing ? 'Hide password' : 'Show password'}
+          >
+            {isShowing ? (
+              // Eye Off Icon (Slash)
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            ) : (
+              // Eye On Icon
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -34,7 +62,7 @@ const CreateAccount = () => {
 
   const [formData, setFormData] = useState({
     fullName: '',
-    gender: '', // 🆕 Added gender
+    gender: '', 
     phone: preselectedPhone,
     email: '',
     password: '',
@@ -48,10 +76,10 @@ const CreateAccount = () => {
   const [role, setRole] = useState(preselectedRole);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  // Live password checks
   const passwordChecks = useMemo(() => ({
     length:    formData.password.length >= 8,
     uppercase: /[A-Z]/.test(formData.password),
@@ -65,7 +93,7 @@ const CreateAccount = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(''); // 🆕 Clear error on type
+    if (error) setError(''); 
   };
 
   const handleSubmit = async (e) => {
@@ -94,7 +122,7 @@ const CreateAccount = () => {
     try {
       const payload = {
         fullName: formData.fullName,
-        gender: formData.gender, // 🆕 Send gender
+        gender: formData.gender, 
         phone: formData.phone,
         email: formData.email,
         password: formData.password,
@@ -191,7 +219,7 @@ const CreateAccount = () => {
             <label className="text-[13px] font-semibold text-[#1D1D1D]">Full Name</label>
           </InputField>
 
-          {/* 🆕 Gender Field */}
+          {/* Gender Field */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#1D1D1D]">Gender</label>
             <div className="relative">
@@ -211,7 +239,6 @@ const CreateAccount = () => {
                 <option value="other" className="text-[#1D1D1D]">Other</option>
                 <option value="prefer_not_to_say" className="text-[#1D1D1D]">Prefer not to say</option>
               </select>
-              {/* Custom dropdown arrow */}
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#9CA3AF]">
                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                   <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
@@ -229,7 +256,7 @@ const CreateAccount = () => {
             </label>
             <div className="relative">
               <input
-                key="input-phone" // 🆕 Stable key
+                key="input-phone" 
                 name="phone"
                 type="tel"
                 placeholder="Enter your phone number"
@@ -242,13 +269,15 @@ const CreateAccount = () => {
                 }`}
               />
               {preselectedPhone && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/phone-signup?role=' + role)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#8EB800] font-semibold hover:underline"
-                >
-                  Edit
-                </button>
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/phone-signup?role=' + role)}
+                    className="text-[11px] text-[#8EB800] font-semibold hover:underline"
+                  >
+                    Edit
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -265,6 +294,7 @@ const CreateAccount = () => {
             </label>
           </InputField>
 
+          {/* Password Field with Toggle */}
           <InputField 
             name="password" 
             type="password" 
@@ -272,6 +302,9 @@ const CreateAccount = () => {
             required
             value={formData.password}
             onChange={handleChange}
+            showToggle={true}
+            isShowing={showPassword}
+            onToggle={() => setShowPassword(!showPassword)}
           >
             <label className="text-[13px] font-semibold text-[#1D1D1D]">Password</label>
           </InputField>
@@ -344,7 +377,6 @@ const CreateAccount = () => {
             </div>
           )}
 
-          {/* 🆕 Reserved space prevents layout shift when error appears */}
           <div className="min-h-[20px] flex items-center">
             {error && <div className="text-red-500 text-sm">{error}</div>}
           </div>

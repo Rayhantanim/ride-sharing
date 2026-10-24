@@ -31,6 +31,8 @@ import Booking from "../Pages/Booking/Booking";
 import DriverDashboard from "../Pages/Driver/DriverDashboard";
 import DriverVerification from "../Pages/Driver/DriverVerification";
 import AdminVerifications from "../Pages/Admin/AdminVerifications";
+import AdminLogin from "../Pages/Admin/AdminLogin";
+import AdminDashboard from "../Pages/Admin/AdminDashboard";
 
 const router = createBrowserRouter([
   {
@@ -161,6 +163,14 @@ const router = createBrowserRouter([
   {
     path:"/admin/verifications",
     element:<AdminVerifications />
+  },
+  {
+    path:"/admin/login",
+    element:<AdminLogin/>
+  },
+  {
+    path:"/admin",
+    element: <AdminDashboard />
   }
 ]);
 
