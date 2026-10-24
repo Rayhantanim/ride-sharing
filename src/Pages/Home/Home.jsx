@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import car from "../../assets/image 125.png";
 import Sidebar from "../../Components/Sidebar.jsx";
+import ChatBot from "../../Components/ChatBot.jsx";
 
 /* ─────────────────────── Icon Set ─────────────────────── */
 
@@ -545,6 +546,8 @@ const Home = () => {
           </Link>
         </div>
       </nav>
+
+      <ChatBot />
 
       {/* Fade-in keyframes */}
       <style>{`
