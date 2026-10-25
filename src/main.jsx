@@ -4,11 +4,11 @@ import './index.css'
 import Home from './Pages/Home/Home.jsx'
 import { RouterProvider } from 'react-router-dom'
 import router from './Router/Router.jsx'
+import ChatBot from './Components/ChatBot.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} >
-    </RouterProvider>
-  
+    <RouterProvider router={router} />
+    <ChatBot />             
   </StrictMode>,
 )
