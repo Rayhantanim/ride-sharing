@@ -2,26 +2,61 @@ import React, { useState, useRef, useEffect } from "react";
 
 /* ─────────────── Icons ─────────────── */
 const ChatBubbleIcon = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="26"
+    height="26"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
   </svg>
 );
 
 const CloseIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  >
     <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 );
 
 const SendIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M22 2L11 13" />
     <path d="M22 2l-7 20-4-9-9-4 20-7z" />
   </svg>
 );
 
 const ExpandIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M8 3H5a2 2 0 0 0-2 2v3" />
     <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
     <path d="M3 16v3a2 2 0 0 0 2 2h3" />
@@ -30,7 +65,16 @@ const ExpandIcon = () => (
 );
 
 const ShrinkIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M8 3v3a2 2 0 0 1-2 2H3" />
     <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
     <path d="M3 16h3a2 2 0 0 1 2 2v3" />
@@ -39,7 +83,16 @@ const ShrinkIcon = () => (
 );
 
 const TrashIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
   </svg>
 );
@@ -67,14 +120,25 @@ const ChatBot = () => {
   const endRef = useRef(null);
 
   const userId = getUserId();
+  // Allow other pages to open the existing AI chat
+  useEffect(() => {
+    const openChat = () => setIsOpen(true);
 
+    window.addEventListener("zygo:open-ai-chat", openChat);
+
+    return () => {
+      window.removeEventListener("zygo:open-ai-chat", openChat);
+    };
+  }, []);
   // Load history when chat first opened
   useEffect(() => {
     if (!isOpen || historyLoaded || !userId) return;
 
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/chat/history?userId=${userId}`);
+        const res = await fetch(
+          `${API_BASE}/api/chat/history?userId=${userId}`,
+        );
         const data = await res.json();
         if (Array.isArray(data.messages)) {
           setMessages(data.messages);
@@ -104,7 +168,9 @@ const ChatBot = () => {
   // Body scroll lock in fullscreen
   useEffect(() => {
     document.body.style.overflow = isFullscreen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isFullscreen]);
 
   const sendMessage = async () => {
@@ -132,14 +198,20 @@ const ChatBot = () => {
       });
       const data = await res.json();
       if (data.message) {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.message },
+        ]);
       } else {
         throw new Error(data.error || "No message");
       }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।" },
+        {
+          role: "assistant",
+          content: "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -201,7 +273,9 @@ const ChatBot = () => {
                 zy
               </div>
               <div>
-                <p className="text-sm font-semibold leading-tight">zyGo Assistant</p>
+                <p className="text-sm font-semibold leading-tight">
+                  zyGo Assistant
+                </p>
                 <p className="text-[11px] opacity-90 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-300 inline-block" />
                   AI · Online
@@ -249,7 +323,11 @@ const ChatBot = () => {
               isFullscreen ? "px-6 py-4" : ""
             }`}
           >
-            <div className={isFullscreen ? "max-w-3xl mx-auto w-full space-y-2" : ""}>
+            <div
+              className={
+                isFullscreen ? "max-w-3xl mx-auto w-full space-y-2" : ""
+              }
+            >
               {messages.length === 0 && (
                 <div className="text-center mt-8 px-4">
                   <p className="text-[13px] text-[#6B7280] leading-relaxed">
@@ -280,8 +358,12 @@ const ChatBot = () => {
                 <div className="flex justify-start">
                   <div className="bg-white border border-[#E5E7EB] px-3 py-2 rounded-xl text-[13px] text-[#6B7280] flex gap-1">
                     <span className="animate-bounce">●</span>
-                    <span className="animate-bounce [animation-delay:120ms]">●</span>
-                    <span className="animate-bounce [animation-delay:240ms]">●</span>
+                    <span className="animate-bounce [animation-delay:120ms]">
+                      ●
+                    </span>
+                    <span className="animate-bounce [animation-delay:240ms]">
+                      ●
+                    </span>
                   </div>
                 </div>
               )}
@@ -290,8 +372,12 @@ const ChatBot = () => {
           </div>
 
           {/* Input */}
-          <div className={`p-2 border-t border-[#E5E7EB] bg-white ${isFullscreen ? "px-6 py-3" : ""}`}>
-            <div className={`flex gap-2 ${isFullscreen ? "max-w-3xl mx-auto" : ""}`}>
+          <div
+            className={`p-2 border-t border-[#E5E7EB] bg-white ${isFullscreen ? "px-6 py-3" : ""}`}
+          >
+            <div
+              className={`flex gap-2 ${isFullscreen ? "max-w-3xl mx-auto" : ""}`}
+            >
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

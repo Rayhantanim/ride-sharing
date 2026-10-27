@@ -1,113 +1,121 @@
-const express = require('express');
-const User = require('../models/User');
-const protect = require('../middleware/authMiddleware');
+const express = require("express");
+const User = require("../models/User");
+const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/**
- * POST /api/users
- * Body: { uid, fullName, phone, email, provider?, photoURL? }
- *
- * Called by your React app after Firebase Auth signup.
- * Uses upsert so it works for BOTH signup and later updates.
- */
-router.post('/', async (req, res) => {
+// GET logged-in user's profile
+router.get("/me", protect, async (req, res) => {
   try {
-    const { uid, fullName, phone, email, provider, photoURL } = req.body;
-
-    if (!uid || !email) {
-      return res.status(400).json({
-        success: false,
-        message: 'uid and email are required',
-      });
-    }
-
-    // Upsert: update if exists, create if not
-    const user = await User.findOneAndUpdate(
-      { uid },
-      {
-        $set: {
-          fullName: fullName || '',
-          phone:    phone    || '',
-          email:    email.toLowerCase(),
-          ...(provider  && { provider }),
-          ...(photoURL  && { photoURL }),
-        },
-        $setOnInsert: { uid },
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true,
-      }
+    const user = await User.findById(req.user._id).select(
+      "fullName phone email gender role verificationStatus vehicle rating totalRides isOnline isDriver createdAt",
     );
 
-    return res.status(201).json({
-      success: true,
-      message: 'User saved successfully',
-      user: {
-        id: user._id,
-        uid: user.uid,
-        fullName: user.fullName,
-        phone: user.phone,
-        email: user.email,
-        provider: user.provider,
-      },
-    });
-  } catch (err) {
-    console.error('❌ POST /api/users error:', err);
-
-    // Duplicate email (different uid) — happens if user already signed up another way
-    if (err.code === 11000) {
-      return res.status(409).json({
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: 'A user with this email already exists.',
+        message: "User not found",
       });
     }
 
-    if (err.name === 'ValidationError') {
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error("Load profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Could not load profile",
+    });
+  }
+});
+
+// Update logged-in user's profile
+router.patch("/me", protect, async (req, res) => {
+  try {
+    const { fullName, phone, gender } = req.body;
+    const updates = {};
+
+    if (fullName !== undefined) {
+      if (typeof fullName !== "string" || !fullName.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Full name is required",
+        });
+      }
+      updates.fullName = fullName.trim();
+    }
+
+    if (phone !== undefined) {
+      if (typeof phone !== "string" || !phone.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone number is required",
+        });
+      }
+      updates.phone = phone.trim();
+    }
+
+    if (gender !== undefined) {
+      const allowed = ["male", "female", "other", "prefer_not_to_say"];
+
+      if (!allowed.includes(gender)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender",
+        });
+      }
+      updates.gender = gender;
+    }
+
+    if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         success: false,
-        message: Object.values(err.errors).map((e) => e.message).join(', '),
+        message: "No profile changes provided",
       });
     }
 
-    return res.status(500).json({
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updates },
+      { new: true, runValidators: true },
+    ).select(
+      "fullName phone email gender role verificationStatus vehicle rating totalRides isOnline isDriver createdAt",
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "This phone number is already registered",
+      });
+    }
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: Object.values(error.errors)
+          .map((item) => item.message)
+          .join(", "),
+      });
+    }
+
+    console.error("Update profile error:", error);
+    res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: err.message,
+      message: "Could not update profile",
     });
   }
 });
 
-/**
- * GET /api/users/:uid
- * Fetch a single user profile by Firebase UID
- */
-router.get('/:uid', async (req, res) => {
-  try {
-    const user = await User.findOne({ uid: req.params.uid });
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-router.get('/me', protect, async (req, res) => {
-  const user = await User.findById(req.user._id);
-  if (!user) return res.status(404).json({ success: false, message: 'Not found' });
-  res.json({
-    success: true,
-    user: {
-      id: user._id,
-      fullName: user.fullName,
-      phone: user.phone,
-      email: user.email,
-    },
-  });
-});
 module.exports = router;

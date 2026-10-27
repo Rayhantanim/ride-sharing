@@ -1,5 +1,5 @@
 const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]); // Google DNS — fixes querySrv ECONNREFUSED
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 require("dotenv").config();
 
@@ -17,14 +17,19 @@ const safetyRoutes = require("./routes/safety");
 const driverRoutes = require("./routes/driver");
 const verificationRoutes = require("./routes/verification");
 const adminRoutes = require("./routes/admin");
+const scheduledRideRoutes = require("./routes/scheduledRides");
+const savedPlaceRoutes = require("./routes/savedPlaces");
+const supportRoutes = require("./routes/support");
 
 const ChatMessage = require("./models/ChatMessage");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 /* ─────────────── Groq Client ─────────────── */
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 /* ─────────────── Middleware ─────────────── */
 app.use(
@@ -36,12 +41,13 @@ app.use(
       "http://localhost:5174",
     ],
     credentials: true,
-  })
+  }),
 );
 
+// Parse JSON request bodies — must be before routes
 app.use(express.json());
 
-/* ─────────────── Routes ─────────────── */
+/* ─────────────── Main Routes ─────────────── */
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -52,24 +58,30 @@ app.use("/api/rides", rideRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/safety", safetyRoutes);
 app.use("/api/driver", driverRoutes);
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use("/api/verification", verificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/scheduled-rides", scheduledRideRoutes);
+app.use("/api/saved-places", savedPlaceRoutes);
+
+// Support submit, history and delete routes
+app.use("/api/support", supportRoutes);
 
 /* ═══════════════════════════════════════════
-   CHAT ROUTES  (শুধু একবার /api/chat POST)
+   CHAT ROUTES
    ═══════════════════════════════════════════ */
 
-/**
- * GET /api/chat/history?userId=xxx
- * User এর পুরনো chat messages load করে
- */
+// GET /api/chat/history?userId=xxx
 app.get("/api/chat/history", async (req, res) => {
   try {
     const { userId } = req.query;
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return res.status(400).json({
+        error: "userId is required",
+      });
     }
 
     const messages = await ChatMessage.find({ userId })
@@ -86,15 +98,14 @@ app.get("/api/chat/history", async (req, res) => {
     res.json({ messages: ordered });
   } catch (error) {
     console.error("History error:", error.message);
-    res.status(500).json({ error: "Could not load history" });
+
+    res.status(500).json({
+      error: "Could not load history",
+    });
   }
 });
 
-/**
- * POST /api/chat
- * AI এর সাথে কথা বলো + history save করো
- * Body: { userId, message }
- */
+// POST /api/chat
 app.post("/api/chat", async (req, res) => {
   try {
     const { userId, message } = req.body;
@@ -102,17 +113,17 @@ app.post("/api/chat", async (req, res) => {
     console.log("📥 Chat request:", { userId, message });
 
     if (!userId || !message || typeof message !== "string") {
-      return res.status(400).json({ error: "userId and message are required" });
+      return res.status(400).json({
+        error: "userId and message are required",
+      });
     }
 
-    // 1. Save user's message
     await ChatMessage.create({
       userId,
       role: "user",
       content: message,
     });
 
-    // 2. Get last 20 messages for context (oldest-first)
     const history = await ChatMessage.find({ userId })
       .sort({ createdAt: -1 })
       .limit(20)
@@ -123,7 +134,6 @@ app.post("/api/chat", async (req, res) => {
       content: m.content,
     }));
 
-    // 3. Call AI (Groq)
     const completion = await groq.chat.completions.create({
       model: "openai/gpt-oss-120b",
       temperature: 0.7,
@@ -143,38 +153,45 @@ app.post("/api/chat", async (req, res) => {
 
     const reply = completion.choices?.[0]?.message?.content || "No response.";
 
-    // 4. Save AI's reply
     await ChatMessage.create({
       userId,
       role: "assistant",
       content: reply,
     });
 
-    // 5. Return reply
     res.json({ message: reply });
   } catch (error) {
     console.error("AI Error:", error.message || error);
-    res.status(500).json({ error: "AI service unavailable. Please try again." });
+
+    res.status(500).json({
+      error: "AI service unavailable. Please try again.",
+    });
   }
 });
 
-/**
- * DELETE /api/chat/history?userId=xxx
- * User এর সব chat history মুছে ফেলে
- */
+// DELETE /api/chat/history?userId=xxx
 app.delete("/api/chat/history", async (req, res) => {
   try {
     const { userId } = req.query;
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return res.status(400).json({
+        error: "userId is required",
+      });
     }
 
     await ChatMessage.deleteMany({ userId });
-    res.json({ success: true, message: "Chat history cleared" });
+
+    res.json({
+      success: true,
+      message: "Chat history cleared",
+    });
   } catch (error) {
     console.error("Delete history error:", error.message);
-    res.status(500).json({ error: "Could not clear history" });
+
+    res.status(500).json({
+      error: "Could not clear history",
+    });
   }
 });
 
@@ -200,5 +217,6 @@ mongoose
     console.error("Error name:", err.name);
     console.error("Error message:", err.message);
     console.error("Error details:", err);
+
     process.exit(1);
   });

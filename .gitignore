@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 echo "backend/uploads/" >> .gitignore
 backend/.env
+.env
+.env.*
+!.env.example
